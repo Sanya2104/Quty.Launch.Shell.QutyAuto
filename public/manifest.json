@@ -1,8 +1,8 @@
 {
-    "name":  "QutyOS Theme",
+    "name":  "QutyLauncher",
     "author":  "QutyTeam",
     "preview":  "preview.png",
     "repoUrl":  "https://raw.githubusercontent.com/Sanya2104/Quty.Launch.Theme.QutyOS/main/",
-    "version":  "0.0.20",
+    "version":  "0.0.21",
     "minLauncherVersion":  "0.0.0"
 }

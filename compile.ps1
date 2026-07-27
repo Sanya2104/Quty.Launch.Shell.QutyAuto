@@ -1,5 +1,5 @@
 ﻿# ============================================================
-# compile.ps1 — Скрипт сборки темы Quty.Launch
+# compile.ps1 — Скрипт сборки оболочки для Quty.Launch
 # ============================================================
 # Назначение:
 #   1. Читает текущую версию из public/manifest.json
@@ -9,10 +9,10 @@
 #   5. Обновляет public/manifest.json (без BOM)
 #   6. Запускает сборку (npm run build)
 #   7. Копирует файлы из dist/ во временную папку
-#   8. Создаёт .qutytheme архив через WinRAR
+#   8. Создаёт .qutyshell архив через WinRAR
 #   9. Копирует файлы в корень проекта:
-#      - QutyOS.qutytheme
-#      - theme.json
+#      - QutyOS.qutyshell
+#      - shell.json
 #   10. Удаляет временную папку
 # ============================================================
 
@@ -20,11 +20,11 @@
 $ErrorActionPreference = "Stop"
 
 # --- Конфигурация ---
-$PROJECT_NAME = "QutyOS"                          # Имя темы
+$PROJECT_NAME = "QutyOS"                          # Имя оболочки
 $MANIFEST_PATH = "public/manifest.json"           # Путь к манифесту
 $DIST_PATH = "dist"                               # Папка со сборкой
-$TEMP_DIR = "temp_theme_build"                    # Временная папка для архива
-$OUTPUT_FILE = "$PROJECT_NAME.qutytheme"          # Итоговый файл темы
+$TEMP_DIR = "temp_shell_build"                    # Временная папка для архива
+$OUTPUT_FILE = "$PROJECT_NAME.qutyshell"          # Итоговый файл оболочки
 
 # Путь к WinRAR (укажите свой!)
 $WINRAR_PATH = "G:\Programs\WinRAR\WinRAR.exe"
@@ -82,7 +82,7 @@ function Update-JsonFile {
 
 Write-Host ""
 Write-Host "==================================================" -ForegroundColor Cyan
-Write-Host "  🚀 СБОРКА ТЕМЫ $PROJECT_NAME" -ForegroundColor Cyan
+Write-Host "  🚀 СБОРКА ОБОЛОЧКИ $PROJECT_NAME" -ForegroundColor Cyan
 Write-Host "==================================================" -ForegroundColor Cyan
 Write-Host ""
 
@@ -96,7 +96,7 @@ $manifestJson = $manifestContent | ConvertFrom-Json
 $currentVersion = $manifestJson.version
 $currentMinLauncher = $manifestJson.minLauncherVersion
 
-Write-Host "   Текущая версия темы: $currentVersion" -ForegroundColor Gray
+Write-Host "   Текущая версия оболочки: $currentVersion" -ForegroundColor Gray
 if ($currentMinLauncher) {
     Write-Host "   Текущая минимальная версия лаунчера: $currentMinLauncher" -ForegroundColor Gray
 } else {
@@ -129,7 +129,7 @@ while ($true) {
 $changelog = if ($changelogLines.Count -gt 0) {
     $changelogLines -join "`n"
 } else {
-    "Обновление темы"
+    "Обновление оболочки"
 }
 Write-Host "   ✅ Changelog записан" -ForegroundColor Green
 Write-Host ""
@@ -250,15 +250,15 @@ $fileSizeMB = [math]::Round($fileSize / 1MB, 2)
 Write-Host "   📊 Размер архива: $fileSizeMB MB" -ForegroundColor Gray
 Write-Host ""
 
-# 9. Создаём theme.json для обновлений
-Write-Host "📝 Создание theme.json..." -ForegroundColor Yellow
+# 9. Создаём shell.json для обновлений
+Write-Host "📝 Создание shell.json..." -ForegroundColor Yellow
 
 # Формируем ссылку на скачивание (используем raw.githubusercontent.com)
 $repoUrl = "https://raw.githubusercontent.com/Sanya2104/Quty.Launch.Theme.QutyOS/main"
 $downloadUrl = "$repoUrl/$OUTPUT_FILE"
 
-# Создаём объект для theme.json
-$themeJson = @{
+# Создаём объект для shell.json
+$shellJson = @{
     name = $PROJECT_NAME
     version = $newVersion
     downloadUrl = $downloadUrl
@@ -268,17 +268,17 @@ $themeJson = @{
 
 # Добавляем minLauncherVersion только если она указана
 if ($minLauncherVersion) {
-    $themeJson | Add-Member -MemberType NoteProperty -Name "minLauncherVersion" -Value $minLauncherVersion
+    $shellJson | Add-Member -MemberType NoteProperty -Name "minLauncherVersion" -Value $minLauncherVersion
 }
 
 # Преобразуем в JSON с отступами
-$themeJsonContent = $themeJson | ConvertTo-Json -Depth 10
+$shellJsonContent = $shellJson | ConvertTo-Json -Depth 10
 
 # Сохраняем без BOM
 $utf8NoBom = New-Object System.Text.UTF8Encoding $false
-[System.IO.File]::WriteAllText("theme.json", $themeJsonContent, $utf8NoBom)
+[System.IO.File]::WriteAllText("shell.json", $shellJsonContent, $utf8NoBom)
 
-Write-Host "   ✅ theme.json создан" -ForegroundColor Green
+Write-Host "   ✅ shell.json создан" -ForegroundColor Green
 Write-Host ""
 
 # 10. Копируем файлы в корень проекта (исправлено!)
@@ -291,9 +291,9 @@ if (Test-Path $OUTPUT_FILE) {
     Write-Host "   ✅ $OUTPUT_FILE уже в корне проекта" -ForegroundColor Green
 }
 
-# theme.json тоже уже в корне
-if (Test-Path "theme.json") {
-    Write-Host "   ✅ theme.json уже в корне проекта" -ForegroundColor Green
+# shell.json тоже уже в корне
+if (Test-Path "shell.json") {
+    Write-Host "   ✅ shell.json уже в корне проекта" -ForegroundColor Green
 }
 
 Write-Host ""
@@ -313,10 +313,10 @@ Write-Host "==================================================" -ForegroundColor
 Write-Host ""
 Write-Host "📦 Итоговые файлы:" -ForegroundColor Yellow
 Write-Host "   📄 $OUTPUT_FILE ($fileSizeMB MB)" -ForegroundColor White
-Write-Host "   📄 theme.json" -ForegroundColor White
+Write-Host "   📄 shell.json" -ForegroundColor White
 Write-Host ""
 Write-Host "📊 Информация о версии:" -ForegroundColor Yellow
-Write-Host "   Версия темы: $newVersion" -ForegroundColor White
+Write-Host "   Версия оболочки: $newVersion" -ForegroundColor White
 if ($minLauncherVersion) {
     Write-Host "   Минимальная версия лаунчера: $minLauncherVersion" -ForegroundColor White
 } else {
