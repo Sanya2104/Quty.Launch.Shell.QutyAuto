@@ -18,27 +18,41 @@ export function getApps() {
       if (!isAndroidAvailable()) {
         devConsole.log('🛠️ Режим разработки: используются тестовые данные')
         apps.value = mockApps
+        loading.value = false
         return
       }
 
-      const response = AndroidApiCall('getApps', null)
+      // АСИНХРОННЫЙ ВЫЗОВ
+      AndroidApiCall(
+        'GetApps',
+        null,
+        // onSuccess
+        (data) => {
+          apps.value = data || []
+          devConsole.info(`✅ Загружено приложений: ${apps.value.length}`)
+          loading.value = false
+        },
+        // onError
+        (err) => {
+          devConsole.error('❌ Ошибка загрузки приложений:', err)
+          error.value = err || 'Не удалось загрузить список приложений'
+          loading.value = false
 
-      if (!response || !response.success) {
-        throw new Error(response?.error || 'Ошибка загрузки приложений')
-      }
-
-      apps.value = response.data
-      devConsole.info(`✅ Загружено приложений: ${apps.value.length}`)
+          if (import.meta.env.DEV && !isAndroidAvailable()) {
+            apps.value = mockApps
+            error.value = null
+          }
+        }
+      )
     } catch (err) {
       devConsole.error('❌ Ошибка загрузки приложений:', err)
       error.value = err.message || 'Не удалось загрузить список приложений'
+      loading.value = false
 
       if (import.meta.env.DEV && !isAndroidAvailable()) {
         apps.value = mockApps
         error.value = null
       }
-    } finally {
-      loading.value = false
     }
   }
 

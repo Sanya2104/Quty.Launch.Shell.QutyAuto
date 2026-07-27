@@ -30,27 +30,41 @@ export function getStatus() {
       if (!isAndroidAvailable()) {
         devConsole.log('🛠️ Режим разработки: используются тестовые данные')
         status.value = mockStatusBar
+        loading.value = false
         return
       }
 
-      const response = AndroidApiCall('getStatusBar', null)
+      // АСИНХРОННЫЙ ВЫЗОВ
+      AndroidApiCall(
+        'GetStatusBar',
+        null,
+        // onSuccess
+        (data) => {
+          status.value = data || mockStatusBar
+          devConsole.log('✅ Статусы загружены:', JSON.stringify(status.value, null, 2))
+          loading.value = false
+        },
+        // onError
+        (err) => {
+          devConsole.error('❌ Ошибка загрузки статусов:', err)
+          error.value = err || 'Не удалось загрузить статусы'
+          loading.value = false
 
-      if (!response || !response.success) {
-        throw new Error(response?.error || 'Ошибка загрузки статусов')
-      }
-
-      status.value = response.data
-      devConsole.log('✅ Статусы загружены:', JSON.stringify(status.value, null, 2))
+          if (import.meta.env.DEV && !isAndroidAvailable()) {
+            status.value = mockStatusBar
+            error.value = null
+          }
+        }
+      )
     } catch (err) {
       devConsole.error('❌ Ошибка загрузки статусов:', err)
       error.value = err.message || 'Не удалось загрузить статусы'
+      loading.value = false
 
       if (import.meta.env.DEV && !isAndroidAvailable()) {
         status.value = mockStatusBar
         error.value = null
       }
-    } finally {
-      loading.value = false
     }
   }
 

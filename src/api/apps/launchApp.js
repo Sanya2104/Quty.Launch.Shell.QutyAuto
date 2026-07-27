@@ -15,15 +15,21 @@ export function launchApp() {
         return true
       }
 
-      const response = AndroidApiCall('launchApp', { packageName })
+      // АСИНХРОННЫЙ ВЫЗОВ
+      AndroidApiCall(
+        'LaunchApp',
+        { packageName },
+        // onSuccess
+        () => {
+          devConsole.info(`✅ Запущено приложение: ${packageName}`)
+        },
+        // onError
+        (err) => {
+          devConsole.warn(`⚠️ Не удалось запустить ${packageName}:`, err)
+        }
+      )
 
-      if (response && response.success) {
-        devConsole.info(`✅ Запущено приложение: ${packageName}`)
-        return true
-      } else {
-        devConsole.warn(`⚠️ Не удалось запустить: ${packageName}`)
-        return false
-      }
+      return true
     } catch (err) {
       devConsole.error('❌ Ошибка запуска приложения:', err)
       return false

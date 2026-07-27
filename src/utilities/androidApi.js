@@ -54,8 +54,73 @@ export const isAndroidAvailable = () => {
   return typeof window.Android !== 'undefined' && typeof window.Android.call === 'function'
 }
 
-// Универсальная функция вызова Android API
-export const AndroidApiCall = (method, params = null) => {
+/**
+ * Универсальная функция вызова Android API (АСИНХРОННАЯ)
+ * @param {string} method - имя метода (например, "GetApps")
+ * @param {object|null} params - параметры для метода
+ * @param {function} onSuccess - callback при успехе (принимает data)
+ * @param {function} onError - callback при ошибке (принимает error)
+ * @returns {string|null} callbackId или null
+ */
+export const AndroidApiCall = (method, params = null, onSuccess = null, onError = null) => {
+  if (!isAndroidAvailable()) {
+    devConsole.warn(`⚠️ Android API не доступен, вызов метода: ${method}`)
+    if (onError) onError('Android API не доступен')
+    return null
+  }
+
+  try {
+    // Генерируем уникальный ID для callback
+    const callbackId = method + '_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5)
+
+    // Сохраняем callback в глобальный объект
+    window._callbacks = window._callbacks || {}
+    window._callbacks[callbackId] = function (result, error) {
+      if (error) {
+        devConsole.error(`❌ Ошибка Android.${method}:`, error)
+        if (onError) onError(error)
+        else devConsole.error('Ошибка:', error)
+        delete window._callbacks[callbackId]
+        return
+      }
+
+      try {
+        const data = typeof result === 'string' ? JSON.parse(result) : result
+        if (data.success) {
+          if (onSuccess) onSuccess(data.data)
+          else devConsole.log(`✅ Android.${method} выполнен успешно`)
+        } else {
+          const errMsg = data.error || 'Неизвестная ошибка'
+          devConsole.error(`❌ Android.${method} вернул ошибку:`, errMsg)
+          if (onError) onError(errMsg)
+        }
+      } catch (err) {
+        devConsole.error(`❌ Ошибка парсинга результата Android.${method}:`, err)
+        if (onError) onError('Ошибка парсинга ответа')
+      }
+
+      delete window._callbacks[callbackId]
+    }
+
+    // Вызываем Android метод (асинхронно)
+    const paramsStr = params ? JSON.stringify(params) : null
+    window.Android.call(method, paramsStr, callbackId)
+
+    return callbackId
+  } catch (error) {
+    devConsole.error(`❌ Ошибка вызова Android.${method}:`, error)
+    if (onError) onError(error.message || 'Неизвестная ошибка')
+    return null
+  }
+}
+
+/**
+ * Синхронная версия (для обратной совместимости)
+ * @deprecated Используйте асинхронный AndroidApiCall с callback
+ */
+export const AndroidApiCallSync = (method, params = null) => {
+  devConsole.warn(`⚠️ AndroidApiCallSync устарел! Используйте асинхронную версию.`)
+
   if (!isAndroidAvailable()) {
     devConsole.warn(`⚠️ Android API не доступен, вызов метода: ${method}`)
     return null
@@ -63,7 +128,7 @@ export const AndroidApiCall = (method, params = null) => {
 
   try {
     const paramsStr = params ? JSON.stringify(params) : null
-    const result = window.Android.call(method, paramsStr)
+    const result = window.Android.callSync(method, paramsStr)
 
     // Если результат — строка, парсим JSON
     if (typeof result === 'string') {
