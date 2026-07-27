@@ -22,7 +22,7 @@ export function getApps() {
         return
       }
 
-      // АСИНХРОННЫЙ ВЫЗОВ
+      // GetApps
       AndroidApiCall(
         'GetApps',
         null,

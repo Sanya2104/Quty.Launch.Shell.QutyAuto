@@ -34,7 +34,7 @@ export function getStatus() {
         return
       }
 
-      // АСИНХРОННЫЙ ВЫЗОВ
+      // GetStatusBar
       AndroidApiCall(
         'GetStatusBar',
         null,

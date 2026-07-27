@@ -56,7 +56,7 @@ export const isAndroidAvailable = () => {
 
 /**
  * Универсальная функция вызова Android API (АСИНХРОННАЯ)
- * @param {string} method - имя метода (например, "GetApps")
+ * @param {string} method - имя метода (например, "GetApps" с большой буквы!)
  * @param {object|null} params - параметры для метода
  * @param {function} onSuccess - callback при успехе (принимает data)
  * @param {function} onError - callback при ошибке (принимает error)
@@ -110,39 +110,6 @@ export const AndroidApiCall = (method, params = null, onSuccess = null, onError 
   } catch (error) {
     devConsole.error(`❌ Ошибка вызова Android.${method}:`, error)
     if (onError) onError(error.message || 'Неизвестная ошибка')
-    return null
-  }
-}
-
-/**
- * Синхронная версия (для обратной совместимости)
- * @deprecated Используйте асинхронный AndroidApiCall с callback
- */
-export const AndroidApiCallSync = (method, params = null) => {
-  devConsole.warn(`⚠️ AndroidApiCallSync устарел! Используйте асинхронную версию.`)
-
-  if (!isAndroidAvailable()) {
-    devConsole.warn(`⚠️ Android API не доступен, вызов метода: ${method}`)
-    return null
-  }
-
-  try {
-    const paramsStr = params ? JSON.stringify(params) : null
-    const result = window.Android.callSync(method, paramsStr)
-
-    // Если результат — строка, парсим JSON
-    if (typeof result === 'string') {
-      try {
-        return JSON.parse(result)
-      } catch {
-        // Если не удалось распарсить, возвращаем как есть
-        return result
-      }
-    }
-
-    return result
-  } catch (error) {
-    devConsole.error(`❌ Ошибка вызова Android.${method}:`, error)
     return null
   }
 }

@@ -15,7 +15,7 @@ export function launchApp() {
         return true
       }
 
-      // АСИНХРОННЫЙ ВЫЗОВ
+      // LaunchApp
       AndroidApiCall(
         'LaunchApp',
         { packageName },
