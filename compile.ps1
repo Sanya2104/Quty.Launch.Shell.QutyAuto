@@ -5,7 +5,7 @@
 #   1. Читает текущую версию из public/manifest.json
 #   2. Запрашивает новую версию (можно оставить текущую)
 #   3. Запрашивает changelog (многострочный)
-#   4. Запрашивает минимальную версию лаунчера (можно пропустить)
+#   4. Запрашивает минимальную версию Quty.Launch (можно пропустить)
 #   5. Обновляет public/manifest.json (без BOM)
 #   6. Запускает сборку (npm run build)
 #   7. Копирует файлы из dist/ во временную папку
@@ -94,13 +94,13 @@ $manifestContent = Remove-BOM -content $manifestContent
 $manifestJson = $manifestContent | ConvertFrom-Json
 
 $currentVersion = $manifestJson.version
-$currentMinLauncher = $manifestJson.minLauncherVersion
+$currentMinQutyLaunch = $manifestJson.minQutyLaunchVersion
 
 Write-Host "   Текущая версия оболочки: $currentVersion" -ForegroundColor Gray
-if ($currentMinLauncher) {
-    Write-Host "   Текущая минимальная версия лаунчера: $currentMinLauncher" -ForegroundColor Gray
+if ($currentMinQutyLaunch) {
+    Write-Host "   Текущая минимальная версия Quty.Launch: $currentMinQutyLaunch" -ForegroundColor Gray
 } else {
-    Write-Host "   Минимальная версия лаунчера не указана" -ForegroundColor Gray
+    Write-Host "   Минимальная версия Quty.Launch не указана" -ForegroundColor Gray
 }
 Write-Host ""
 
@@ -134,19 +134,19 @@ $changelog = if ($changelogLines.Count -gt 0) {
 Write-Host "   ✅ Changelog записан" -ForegroundColor Green
 Write-Host ""
 
-# 4. Запрашиваем минимальную версию лаунчера
-Write-Host "📝 Введите минимальную версию лаунчера (например, 1.0.0)" -ForegroundColor Yellow
-Write-Host "   (Enter для пропуска, текущее значение: $currentMinLauncher)" -ForegroundColor Gray
-$minLauncherVersion = Read-Host
-if ([string]::IsNullOrWhiteSpace($minLauncherVersion)) {
-    $minLauncherVersion = $currentMinLauncher
-    if ($minLauncherVersion) {
-        Write-Host "   ✅ Оставлена минимальная версия: $minLauncherVersion" -ForegroundColor Green
+# 4. Запрашиваем минимальную версию Quty.Launch
+Write-Host "📝 Введите минимальную версию Quty.Launch (например, 0.1.0)" -ForegroundColor Yellow
+Write-Host "   (Enter для пропуска, текущее значение: $currentMinQutyLaunch)" -ForegroundColor Gray
+$minQutyLaunchVersion = Read-Host
+if ([string]::IsNullOrWhiteSpace($minQutyLaunchVersion)) {
+    $minQutyLaunchVersion = $currentMinQutyLaunch
+    if ($minQutyLaunchVersion) {
+        Write-Host "   ✅ Оставлена минимальная версия: $minQutyLaunchVersion" -ForegroundColor Green
     } else {
-        Write-Host "   ⏭️ Поле minLauncherVersion будет удалено" -ForegroundColor Yellow
+        Write-Host "   ⏭️ Поле minQutyLaunchVersion будет удалено" -ForegroundColor Yellow
     }
 } else {
-    Write-Host "   ✅ Установлена минимальная версия: $minLauncherVersion" -ForegroundColor Green
+    Write-Host "   ✅ Установлена минимальная версия: $minQutyLaunchVersion" -ForegroundColor Green
 }
 Write-Host ""
 
@@ -156,15 +156,15 @@ Write-Host "📝 Обновление $MANIFEST_PATH..." -ForegroundColor Yellow
 # Обновляем версию
 Update-JsonFile -FilePath $MANIFEST_PATH -Key "version" -Value $newVersion
 
-# Обновляем или удаляем minLauncherVersion
-if ($minLauncherVersion) {
-    Update-JsonFile -FilePath $MANIFEST_PATH -Key "minLauncherVersion" -Value $minLauncherVersion
+# Обновляем или удаляем minQutyLaunchVersion
+if ($minQutyLaunchVersion) {
+    Update-JsonFile -FilePath $MANIFEST_PATH -Key "minQutyLaunchVersion" -Value $minQutyLaunchVersion
 } else {
     # Если пусто — удаляем поле
     $content = Get-Content -Path $MANIFEST_PATH -Raw -Encoding UTF8
     $content = Remove-BOM -content $content
     $json = $content | ConvertFrom-Json
-    $json.PSObject.Properties.Remove("minLauncherVersion")
+    $json.PSObject.Properties.Remove("minQutyLaunchVersion")
     $newContent = $json | ConvertTo-Json -Depth 10
     $utf8NoBom = New-Object System.Text.UTF8Encoding $false
     [System.IO.File]::WriteAllText($MANIFEST_PATH, $newContent, $utf8NoBom)
@@ -266,9 +266,9 @@ $shellJson = @{
     fileSize = "$fileSizeMB MB"
 }
 
-# Добавляем minLauncherVersion только если она указана
-if ($minLauncherVersion) {
-    $shellJson | Add-Member -MemberType NoteProperty -Name "minLauncherVersion" -Value $minLauncherVersion
+# Добавляем minQutyLaunchVersion только если она указана
+if ($minQutyLaunchVersion) {
+    $shellJson | Add-Member -MemberType NoteProperty -Name "minQutyLaunchVersion" -Value $minQutyLaunchVersion
 }
 
 # Преобразуем в JSON с отступами
@@ -317,10 +317,10 @@ Write-Host "   📄 shell.json" -ForegroundColor White
 Write-Host ""
 Write-Host "📊 Информация о версии:" -ForegroundColor Yellow
 Write-Host "   Версия оболочки: $newVersion" -ForegroundColor White
-if ($minLauncherVersion) {
-    Write-Host "   Минимальная версия лаунчера: $minLauncherVersion" -ForegroundColor White
+if ($minQutyLaunchVersion) {
+    Write-Host "   Минимальная версия Quty.Launch: $minQutyLaunchVersion" -ForegroundColor White
 } else {
-    Write-Host "   Минимальная версия лаунчера: не указана" -ForegroundColor Gray
+    Write-Host "   Минимальная версия Quty.Launch: не указана" -ForegroundColor Gray
 }
 Write-Host ""
 Write-Host "📝 Changelog:" -ForegroundColor Yellow
