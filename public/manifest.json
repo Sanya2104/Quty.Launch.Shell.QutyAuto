@@ -1,8 +1,9 @@
 {
-    "name":  "QutyLauncher",
+    "name":  "QutyAuto",
     "author":  "QutyTeam",
     "preview":  "preview.png",
-    "repoUrl":  "https://raw.githubusercontent.com/Sanya2104/Quty.Launch.Theme.QutyOS/main/",
-    "version":  "0.0.23",
-    "minQutyLaunchVersion":  "0.0.0"
+    "orientation":  "sensor",
+    "repoUrl":  "https://raw.githubusercontent.com/Sanya2104/Quty.Launch.Shell.QutyAuto/main/",
+    "version":  "0.0.2",
+    "minQutyLaunchVersion":  "0.0.1"
 }

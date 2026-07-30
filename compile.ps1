@@ -11,7 +11,7 @@
 #   7. Копирует файлы из dist/ во временную папку
 #   8. Создаёт .qutyshell архив через WinRAR
 #   9. Копирует файлы в корень проекта:
-#      - QutyOS.qutyshell
+#      - QutyAuto.qutyshell
 #      - shell.json
 #   10. Удаляет временную папку
 # ============================================================
@@ -20,7 +20,7 @@
 $ErrorActionPreference = "Stop"
 
 # --- Конфигурация ---
-$PROJECT_NAME = "QutyOS"                          # Имя оболочки
+$PROJECT_NAME = "QutyAuto"                          # Имя оболочки
 $MANIFEST_PATH = "public/manifest.json"           # Путь к манифесту
 $DIST_PATH = "dist"                               # Папка со сборкой
 $TEMP_DIR = "temp_shell_build"                    # Временная папка для архива
@@ -254,7 +254,7 @@ Write-Host ""
 Write-Host "📝 Создание shell.json..." -ForegroundColor Yellow
 
 # Формируем ссылку на скачивание (используем raw.githubusercontent.com)
-$repoUrl = "https://raw.githubusercontent.com/Sanya2104/Quty.Launch.Theme.QutyOS/main"
+$repoUrl = "https://raw.githubusercontent.com/Sanya2104/Quty.Launch.Shell.QutyAuto/main"
 $downloadUrl = "$repoUrl/$OUTPUT_FILE"
 
 # Создаём объект для shell.json

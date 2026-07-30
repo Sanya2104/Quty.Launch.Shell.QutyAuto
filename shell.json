@@ -1,8 +1,8 @@
 {
     "changelog":  "Обновление оболочки",
-    "fileSize":  "2.72 MB",
-    "name":  "QutyOS",
-    "version":  "0.0.23",
-    "downloadUrl":  "https://raw.githubusercontent.com/Sanya2104/Quty.Launch.Theme.QutyOS/main/QutyOS.qutyshell",
-    "minLauncherVersion":  "0.0.0"
+    "fileSize":  "2.64 MB",
+    "name":  "QutyAuto",
+    "version":  "0.0.2",
+    "downloadUrl":  "https://raw.githubusercontent.com/Sanya2104/Quty.Launch.Shell.QutyAuto/main/QutyAuto.qutyshell",
+    "minQutyLaunchVersion":  "0.0.1"
 }

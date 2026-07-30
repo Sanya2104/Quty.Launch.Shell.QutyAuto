@@ -1,10 +1,10 @@
 ﻿# deploy.ps1
-# Скрипт для сборки проекта QutyOS и деплоя в Quty.Launch
+# Скрипт для сборки проекта QutyAuto и деплоя в Quty.Launch
 
 # Параметры
-$projectPath = "D:\Android\Themes\Quty.Launch.Theme.QutyOS"
-$distPath = "D:\Android\Themes\Quty.Launch.Theme.QutyOS\dist"
-$targetPath = "D:\Android\Quty.Launch\app\src\main\assets\themes\QutyOS"
+$projectPath = "D:\Android\Themes\Quty.Launch.Shell.QutyAuto"
+$distPath = "D:\Android\Themes\Quty.Launch.Shell.QutyAuto\dist"
+$targetPath = "D:\Android\Quty.Launch\app\src\main\assets\shells\QutyAuto"
 
 # Файлы, которые нужно сохранить
 $keepFiles = @("manifest.json", "preview.png", "preview.ico", "preview.jpg")
@@ -93,5 +93,5 @@ if ($keptFiles.Count -gt 0) {
 }
 
 Write-Host ""
-Write-Host "✨ Готово! Тема QutyOS успешно собрана и развернута в Quty.Launch" -ForegroundColor Green
+Write-Host "✨ Готово! Тема QutyAuto успешно собрана и развернута в Quty.Launch" -ForegroundColor Green
 Write-Host "📂 Целевая директория: $targetPath" -ForegroundColor Cyan

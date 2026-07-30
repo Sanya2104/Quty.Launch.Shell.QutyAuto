@@ -37,6 +37,6 @@
 
 <style scoped>
   #AppBackground {
-    background-image: url('@/assets/images/wallpaper2.jpg');
+    background-image: url('@/assets/images/wallpaper.jpg');
   }
 </style>

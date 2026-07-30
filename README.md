@@ -1,2 +1,3 @@
-# Quty.Launch.Theme.QutyOS
-QutyOS theme for Quty.Launch
+# Quty.Launch.Shell.QutyAuto
+
+QutyAuto shell for Quty.Launch
