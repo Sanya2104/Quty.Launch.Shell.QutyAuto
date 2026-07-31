@@ -332,3 +332,7 @@ Write-Host "   $downloadUrl" -ForegroundColor Gray
 Write-Host ""
 
 Write-Host "==================================================" -ForegroundColor Cyan
+
+Write-Host ""
+Write-Host "Нажмите любую клавишу для выхода..." -ForegroundColor Yellow
+Read-Host

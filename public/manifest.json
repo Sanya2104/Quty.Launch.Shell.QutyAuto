@@ -5,5 +5,5 @@
     "orientation":  "sensor",
     "repoUrl":  "https://raw.githubusercontent.com/Sanya2104/Quty.Launch.Shell.QutyAuto/main/",
     "version":  "0.0.3",
-    "minQutyLaunchVersion":  "0.0.1"
+    "minQutyLaunchVersion":  "0.0.0"
 }
