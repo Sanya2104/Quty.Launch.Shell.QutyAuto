@@ -5,59 +5,11 @@ export const devConsole = {
   _logs: [],
   _maxLogs: 250, // Максимум записей
 
-  // Флаг, что логгер доступен
-  _isLoggerAvailable: false,
-
-  /**
-   * Проверяет доступность логгера в Quty.Launch
-   */
-  _checkLoggerAvailability() {
-    // Проверяем, есть ли Android и метод для отправки логов
-    if (typeof window.Android !== 'undefined' && typeof window.Android.log === 'function') {
-      this._isLoggerAvailable = true
-    } else {
-      // Пробуем альтернативный способ через консоль (для отладки)
-      this._isLoggerAvailable = false
-    }
-    return this._isLoggerAvailable
-  },
-
-  /**
-   * Отправляет чистое сообщение в логгер Quty.Launch
-   * @param {string} level - уровень (log, info, warn, error)
-   * @param {string} message - сообщение
-   * @param {string} tag - тег (например, "DevConsole")
-   */
-  _sendToLogger(level, message, tag = 'DevConsole') {
-    // Проверяем доступность логгера
-    if (!this._checkLoggerAvailability()) {
-      return
-    }
-
-    try {
-      // Отправляем только чистое сообщение
-      const logData = {
-        level: level,
-        tag: tag,
-        message: message,
-      }
-
-      // Используем Android.log если доступен
-      if (typeof window.Android !== 'undefined' && typeof window.Android.log === 'function') {
-        window.Android.log(JSON.stringify(logData))
-      }
-
-      // eslint-disable-next-line no-unused-vars
-    } catch (error) {
-      // Игнорируем ошибки отправки в логгер
-    }
-  },
-
   log(...args) {
     const message = args.join(' ')
     this._printAndSave('log', '🟢', 'rgba(76, 175, 80, 0.6)', ...args)
-    // Отправляем в логгер только чистое сообщение
-    this._sendToLogger('log', message)
+    // Отправляем в логгер через JsBridge.log()
+    this._sendToLogger('debug', message)
   },
 
   warn(...args) {
@@ -76,6 +28,29 @@ export const devConsole = {
     const message = args.join(' ')
     this._printAndSave('info', '🔵', 'rgba(33, 150, 243, 0.6)', ...args)
     this._sendToLogger('info', message)
+  },
+
+  /**
+   * Отправляет чистое сообщение в логгер Quty.Launch через JsBridge
+   * @param {string} level - уровень (debug, info, warn, error)
+   * @param {string} message - сообщение
+   */
+  _sendToLogger(level, message) {
+    try {
+      // Проверяем доступность JsBridge.log()
+      if (typeof window.Android !== 'undefined' && typeof window.Android.log === 'function') {
+        const logData = {
+          level: level,
+          tag: 'DevConsole',
+          message: message,
+        }
+        window.Android.log(JSON.stringify(logData))
+      }
+
+      // eslint-disable-next-line no-unused-vars
+    } catch (error) {
+      // Игнорируем ошибки отправки в логгер
+    }
   },
 
   _printAndSave(type, emoji, color, ...args) {
