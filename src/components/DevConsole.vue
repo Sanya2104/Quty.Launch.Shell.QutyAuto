@@ -48,7 +48,8 @@
   const copyAllLogs = async () => {
     const logText = logs.value
       .map((log) => {
-        let message = log.message
+        // Используем cleanMessage вместо message для чистого текста
+        let message = log.cleanMessage || log.message
         if (typeof message === 'object') {
           message = JSON.stringify(message, null, 2)
         }

@@ -37,12 +37,12 @@ export const devConsole = {
    */
   _sendToLogger(level, message) {
     try {
-      // Проверяем доступность JsBridge.log()
       if (typeof window.Android !== 'undefined' && typeof window.Android.log === 'function') {
+        // Добавляем маркер, чтобы WebView не дублировал этот лог
         const logData = {
           level: level,
           tag: this._lastFile || 'WebView',
-          message: message,
+          message: '[JS_BRIDGE_LOG] ' + message,
         }
         window.Android.log(JSON.stringify(logData))
       }
@@ -58,6 +58,9 @@ export const devConsole = {
     let location = 'Unknown'
     let file = 'unknown'
     let line = '0'
+
+    // Сохраняем чистое сообщение (без CSS)
+    const cleanMessage = args.join(' ')
 
     try {
       // Получаем стек вызовов
@@ -102,7 +105,7 @@ export const devConsole = {
     const message = args.join(' ')
 
     // Создаём ключ для группировки (тип + сообщение + файл)
-    const groupKey = `${type}:${message}:${file}`
+    const groupKey = `${type}:${cleanMessage}:${file}`
 
     const logEntry = {
       type,
@@ -112,7 +115,8 @@ export const devConsole = {
       file, // только имя файла: file.vue
       line, // только номер строки: 84
       color, // цвет для бордера
-      message,
+      message, // форматированное сообщение (для отображения в UI)
+      cleanMessage, // чистое сообщение (для копирования и отправки)
       groupKey,
       count: 1, // Для группировки
       isGrouped: false, // Флаг, что это сгруппированное сообщение
