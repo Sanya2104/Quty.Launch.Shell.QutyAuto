@@ -38,11 +38,10 @@ export const devConsole = {
   _sendToLogger(level, message) {
     try {
       if (typeof window.Android !== 'undefined' && typeof window.Android.log === 'function') {
-        // Добавляем маркер, чтобы WebView не дублировал этот лог
         const logData = {
           level: level,
           tag: this._lastFile || 'WebView',
-          message: '[JS_BRIDGE_LOG] ' + message,
+          message: message,
         }
         window.Android.log(JSON.stringify(logData))
       }

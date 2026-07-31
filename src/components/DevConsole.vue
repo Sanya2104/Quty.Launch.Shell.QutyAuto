@@ -48,7 +48,6 @@
   const copyAllLogs = async () => {
     const logText = logs.value
       .map((log) => {
-        // Используем cleanMessage вместо message для чистого текста
         let message = log.cleanMessage || log.message
         if (typeof message === 'object') {
           message = JSON.stringify(message, null, 2)
@@ -59,13 +58,29 @@
       .join('\n\n')
 
     try {
-      await navigator.clipboard.writeText(logText)
+      // Пробуем через Clipboard API
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(logText)
+      } else {
+        // Fallback: создаём временный textarea
+        const textarea = document.createElement('textarea')
+        textarea.value = logText
+        textarea.style.position = 'fixed'
+        textarea.style.opacity = '0'
+        textarea.style.left = '-9999px'
+        document.body.appendChild(textarea)
+        textarea.select()
+        document.execCommand('copy')
+        document.body.removeChild(textarea)
+      }
       copySuccess.value = true
       setTimeout(() => {
         copySuccess.value = false
       }, 2000)
     } catch (err) {
       devConsole.error('Ошибка копирования:', err)
+      // Показываем сообщение об ошибке пользователю
+      alert('Не удалось скопировать логи. Попробуйте выделить текст вручную.')
     }
   }
 
