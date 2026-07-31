@@ -113,3 +113,23 @@ export const AndroidApiCall = (method, params = null, onSuccess = null, onError 
     return null
   }
 }
+
+/**
+ * Отправляет лог в Quty.Launch
+ * @param {string} level - уровень (log, info, warn, error)
+ * @param {string} message - сообщение
+ * @param {string} tag - тег
+ */
+export const AndroidLog = (level, message, tag = 'DevConsole') => {
+  try {
+    if (typeof window.Android !== 'undefined' && typeof window.Android.log === 'function') {
+      window.Android.log(JSON.stringify({ level, tag, message }))
+      return true
+    }
+    return false
+
+    // eslint-disable-next-line no-unused-vars
+  } catch (error) {
+    return false
+  }
+}
