@@ -4,11 +4,11 @@ export const devConsole = {
   // Просто массив для хранения логов
   _logs: [],
   _maxLogs: 250, // Максимум записей
+  _lastFile: 'WebView', // для отправки в логгер
 
   log(...args) {
     const message = args.join(' ')
     this._printAndSave('log', '🟢', 'rgba(76, 175, 80, 0.6)', ...args)
-    // Отправляем в логгер через JsBridge.log()
     this._sendToLogger('debug', message)
   },
 
@@ -41,7 +41,7 @@ export const devConsole = {
       if (typeof window.Android !== 'undefined' && typeof window.Android.log === 'function') {
         const logData = {
           level: level,
-          tag: 'DevConsole',
+          tag: this._lastFile || 'WebView',
           message: message,
         }
         window.Android.log(JSON.stringify(logData))
@@ -95,7 +95,9 @@ export const devConsole = {
       // В случае ошибки - просто используем Unknown
     }
 
-    // 1. Сохраняем в память
+    // Сохраняем file для отправки в логгер
+    this._lastFile = file
+
     const timestamp = new Date().toLocaleTimeString()
     const message = args.join(' ')
 
