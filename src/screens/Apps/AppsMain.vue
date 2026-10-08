@@ -55,7 +55,10 @@
             {{ app.isCustom ? '⚙️' : '📱' }}
           </span>
         </div>
-        <span class="app-name color-coolgray-080">{{ app.name }}</span>
+        <!-- <span class="app-name color-coolgray-080">{{ app.name }}</span> -->
+        <span class="app-name color-coolgray-080">
+          {{ app.name }} ({{ app.iconBase64?.length ?? 0 }})
+        </span>
       </div>
     </div>
   </div>
