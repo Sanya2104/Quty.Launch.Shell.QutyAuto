@@ -8,8 +8,15 @@ export function getApps() {
   const loading = ref(true)
   const error = ref(null)
 
-  const loadApps = async () => {
-    if (!loading.value && apps.value.length > 0) return
+  /**
+   * Загружает список приложений через GetApps.
+   *
+   * @param {boolean} force — если true, перезагружает даже когда
+   *   список уже загружен (используется при появлении маркера
+   *   обновления: ядро навешивает badge, оболочка перезапрашивает).
+   */
+  const loadApps = async (force = false) => {
+    if (!force && !loading.value && apps.value.length > 0) return
 
     loading.value = true
     error.value = null

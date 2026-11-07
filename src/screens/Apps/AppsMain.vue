@@ -1,21 +1,114 @@
 <!-- src/screens/Apps/AppsMain.vue -->
 <script setup>
-  import { onMounted } from 'vue'
+  import { onMounted, onUnmounted } from 'vue'
   import { getApps } from '@/api/apps/getApps'
   import { launchApp } from '@/api/apps/launchApp'
+  import { AndroidApiCall, isAndroidAvailable } from '@/utilities/androidApi'
+  import { devConsole } from '@/utilities/devConsole'
 
   const { apps, loading, error, loadApps } = getApps()
   const { run: launch } = launchApp()
+
+  // Последнее известное состояние маркера обновления — чтобы
+  // перезагружать список только при реальном изменении (не на каждое
+  // событие onCoreStateChanged)
+  let lastUpdateBadge = null
 
   // Обработчик ошибки загрузки иконки
   const onIconError = (event) => {
     event.target.style.display = 'none'
   }
 
+  /**
+   * Запрашивает GetCoreState и сравнивает updateBadge с предыдущим.
+   * Если состояние изменилось (обновление появилось/исчезло) —
+   * перезагружает список приложений, чтобы маркер обновился.
+   */
+  const checkUpdateBadge = () => {
+    if (!isAndroidAvailable()) return
+
+    AndroidApiCall(
+      'GetCoreState',
+      null,
+      (data) => {
+        const currentBadge = data?.updateBadge === true
+        if (lastUpdateBadge !== currentBadge) {
+          lastUpdateBadge = currentBadge
+          devConsole.info(`🔄 updateBadge → ${currentBadge}, перезапрос GetApps`)
+          loadApps(true)
+        }
+      },
+      (err) => {
+        devConsole.warn('⚠️ GetCoreState (для updateBadge) не удался:', err)
+      }
+    )
+  }
+
+  /**
+   * Глобальный обработчик onCoreStateChanged от ядра.
+   * Ядро шлёт его при смене языка, темы, появлении обновления и т.д.
+   *
+   * Мы подписаны только на факт изменения — перезапрашиваем
+   * CoreState и сравниваем updateBadge. Если он не изменился —
+   * ничего не делаем (не спамим GetApps).
+   */
+  window.onCoreStateChanged = () => {
+    devConsole.info('🔔 onCoreStateChanged')
+    checkUpdateBadge()
+  }
+
   // Загружаем приложения
   onMounted(() => {
     loadApps()
+    // Начальное состояние updateBadge — чтобы не сработало ложное
+    // «изменилось» на первом onCoreStateChanged
+    if (isAndroidAvailable()) {
+      AndroidApiCall(
+        'GetCoreState',
+        null,
+        (data) => {
+          lastUpdateBadge = data?.updateBadge === true
+        },
+        () => {
+          // Молча игнорируем — не критично для UI
+        }
+      )
+    }
   })
+
+  onUnmounted(() => {
+    // Снимаем глобальный обработчик, чтобы не мешал другим экранам.
+    // Если ядро пошлёт onCoreStateChanged, когда AppsMain не открыт —
+    // мы просто ничего не сделаем.
+    window.onCoreStateChanged = null
+  })
+
+  /**
+   * Возвращает цвет маркера в виде CSS-строки.
+   *
+   * Приоритет:
+   * 1. app.badgeColorHex — готовый HEX от ядра (BadgeHelper).
+   * 2. app.badgeColor — семантика ("accent" | "warning" | "error").
+   *    Fallback-маппинг на случай, если HEX не пришёл.
+   * 3. #009688 — дефолтный accent (status_accent).
+   */
+  const getBadgeColor = (app) => {
+    // 1. Готовый HEX от ядра
+    if (app.badgeColorHex) {
+      return app.badgeColorHex
+    }
+
+    // 2. Fallback: семантика → HEX
+    switch (app.badgeColor) {
+      case 'error':
+        return '#F44336' // status_error
+      case 'warning':
+        return '#FF9800' // status_warning
+      case 'accent':
+      default:
+        return '#009688' // status_accent
+    }
+  }
 </script>
 
 <template>
@@ -54,11 +147,16 @@
           <span v-else class="emoji-placeholder">
             {{ app.isCustom ? '⚙️' : '📱' }}
           </span>
+
+          <!-- Маркер (badge): точка в правом верхнем углу иконки -->
+          <span
+            v-if="app.badge"
+            class="app-badge"
+            :style="{ backgroundColor: getBadgeColor(app) }"
+            :aria-label="'Update available'"
+          ></span>
         </div>
-        <!-- <span class="app-name color-coolgray-080">{{ app.name }}</span> -->
-        <span class="app-name color-coolgray-080">
-          {{ app.name }} ({{ app.iconBase64?.length ?? 0 }})
-        </span>
+        <span class="app-name color-coolgray-080">{{ app.name }}</span>
       </div>
     </div>
   </div>
@@ -173,6 +271,8 @@
     align-items: center;
     justify-content: center;
     margin-bottom: 8px;
+    /* Маркер позиционируется абсолютно внутри этого контейнера */
+    position: relative;
   }
 
   .app-icon img {
@@ -183,6 +283,20 @@
 
   .emoji-placeholder {
     font-size: 40px;
+  }
+
+  /* Маркер (badge): точка в правом верхнем углу иконки */
+  .app-badge {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    /* Белая обводка — чтобы маркер читался на любой иконке */
+    box-shadow: 0 0 0 2px rgba(20, 20, 20, 0.6);
+    pointer-events: none;
+    z-index: 2;
   }
 
   .app-name {

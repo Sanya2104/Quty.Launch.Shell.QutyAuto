@@ -1,38 +1,59 @@
 ﻿# ============================================================
-# compile.ps1 — Скрипт сборки оболочки для Quty.Launch
+# compile.qutyshell.ps1 — Скрипт сборки оболочки для Quty.Launch
 # ============================================================
 # Назначение:
 #   1. Читает текущую версию из public/manifest.json
 #   2. Запрашивает новую версию (можно оставить текущую)
-#   3. Запрашивает changelog (многострочный)
-#   4. Запрашивает минимальную версию Quty.Launch (можно пропустить)
-#   5. Обновляет public/manifest.json (без BOM)
-#   6. Запускает сборку (npm run build)
-#   7. Копирует файлы из dist/ во временную папку
-#   8. Создаёт .qutyshell архив через WinRAR
-#   9. Копирует файлы в корень проекта:
-#      - QutyAuto.qutyshell
-#      - shell.json
-#   10. Удаляет временную папку
+#   3. Запрашивает минимальную версию Quty.Launch (можно пропустить)
+#   4. Обновляет public/manifest.json (без BOM)
+#   5. Запускает сборку (npm run build)
+#   6. Копирует файлы из dist/ во временную папку
+#   7. Создаёт .qutyshell архив через WinRAR
+#   8. Копирует итоговые файлы в репозиторий Quty.Launch.Server:
+#      - store/shells/<ИмяОболочки>/<ИмяОболочки>.qutyshell
+#      - store/shells/<ИмяОболочки>/manifest.json
+#      - store/shells/<ИмяОболочки>/preview.png
+#   9. Удаляет временную папку
+#
+# ПРИМЕЧАНИЕ:
+#   - shell.json больше НЕ генерируется. Обновления оболочек идут
+#     через store/shells.json, который автоматически собирает
+#     GitHub Actions в репозитории Quty.Launch.Server при push
+#     в store/shells/**.
+#   - changelog больше не вводится — в новой схеме его нет.
+#   - fileSize не задаётся вручную — GitHub Actions вычисляет его
+#     из размера .qutyshell.
+#   - datePublished вычисляется из даты коммита папки оболочки.
 # ============================================================
 
-# Отключаем вывод команд в консоль (делаем скрипт тише)
+# Отключаем вывод команд в консоль
 $ErrorActionPreference = "Stop"
 
 # --- Конфигурация ---
-$PROJECT_NAME = "QutyAuto"                          # Имя оболочки
-$MANIFEST_PATH = "public/manifest.json"           # Путь к манифесту
-$DIST_PATH = "dist"                               # Папка со сборкой
-$TEMP_DIR = "temp_shell_build"                    # Временная папка для архива
-$OUTPUT_FILE = "$PROJECT_NAME.qutyshell"          # Итоговый файл оболочки
+$PROJECT_NAME = "QutyAuto"                          # Имя оболочки (папка в store/shells/)
+$MANIFEST_PATH = "public/manifest.json"             # Путь к манифесту
+$DIST_PATH = "dist"                                 # Папка со сборкой
+$TEMP_DIR = "temp_shell_build"                      # Временная папка для архива
+$OUTPUT_FILE = "$PROJECT_NAME.qutyshell"            # Итоговый файл оболочки
 
 # Путь к WinRAR (укажите свой!)
 $WINRAR_PATH = "G:\Programs\WinRAR\WinRAR.exe"
+
+# Путь к локальной копии репозитория Quty.Launch.Server
+# Укажи свой путь. Пример: "D:\Android\Quty.Launch.Server"
+$SERVER_REPO_PATH = "D:\Android\Quty.Launch.Server"
 
 # Проверяем, существует ли WinRAR
 if (-not (Test-Path $WINRAR_PATH)) {
     Write-Host "❌ Ошибка: WinRAR не найден по пути: $WINRAR_PATH" -ForegroundColor Red
     Write-Host "   Пожалуйста, укажите правильный путь к WinRAR.exe в скрипте." -ForegroundColor Yellow
+    exit 1
+}
+
+# Проверяем, существует ли репозиторий сервера
+if (-not (Test-Path $SERVER_REPO_PATH)) {
+    Write-Host "❌ Ошибка: репозиторий Quty.Launch.Server не найден по пути: $SERVER_REPO_PATH" -ForegroundColor Red
+    Write-Host "   Пожалуйста, укажите правильный путь к локальной копии Quty.Launch.Server." -ForegroundColor Yellow
     exit 1
 }
 
@@ -115,26 +136,7 @@ if ([string]::IsNullOrWhiteSpace($newVersion)) {
 }
 Write-Host ""
 
-# 3. Запрашиваем changelog
-Write-Host "📝 Введите changelog (многострочный, Enter для завершения):" -ForegroundColor Yellow
-Write-Host "   (Для завершения ввода введите пустую строку или 'end')" -ForegroundColor Gray
-$changelogLines = @()
-while ($true) {
-    $line = Read-Host
-    if ([string]::IsNullOrWhiteSpace($line) -or $line -eq "end") {
-        break
-    }
-    $changelogLines += $line
-}
-$changelog = if ($changelogLines.Count -gt 0) {
-    $changelogLines -join "`n"
-} else {
-    "Обновление оболочки"
-}
-Write-Host "   ✅ Changelog записан" -ForegroundColor Green
-Write-Host ""
-
-# 4. Запрашиваем минимальную версию Quty.Launch
+# 3. Запрашиваем минимальную версию Quty.Launch
 Write-Host "📝 Введите минимальную версию Quty.Launch (например, 0.1.0)" -ForegroundColor Yellow
 Write-Host "   (Enter для пропуска, текущее значение: $currentMinQutyLaunch)" -ForegroundColor Gray
 $minQutyLaunchVersion = Read-Host
@@ -150,7 +152,7 @@ if ([string]::IsNullOrWhiteSpace($minQutyLaunchVersion)) {
 }
 Write-Host ""
 
-# 5. Обновляем manifest.json
+# 4. Обновляем manifest.json
 Write-Host "📝 Обновление $MANIFEST_PATH..." -ForegroundColor Yellow
 
 # Обновляем версию
@@ -173,7 +175,7 @@ if ($minQutyLaunchVersion) {
 Write-Host "   ✅ manifest.json обновлён" -ForegroundColor Green
 Write-Host ""
 
-# 6. Запускаем сборку
+# 5. Запускаем сборку
 Write-Host "🔨 Запуск сборки (npm run build)..." -ForegroundColor Yellow
 npm run build
 
@@ -184,7 +186,7 @@ if ($LASTEXITCODE -ne 0) {
 Write-Host "   ✅ Сборка завершена" -ForegroundColor Green
 Write-Host ""
 
-# 7. Создаём временную папку
+# 6. Создаём временную папку
 Write-Host "📁 Подготовка файлов для архива..." -ForegroundColor Yellow
 
 if (Test-Path $TEMP_DIR) {
@@ -217,7 +219,7 @@ if (Test-Path "public\favicon.ico") {
 Write-Host "   ✅ Файлы скопированы во временную папку" -ForegroundColor Green
 Write-Host ""
 
-# 8. Создаём ZIP архив через WinRAR (без сжатия)
+# 7. Создаём ZIP архив через WinRAR (без сжатия)
 Write-Host "📦 Создание архива $OUTPUT_FILE..." -ForegroundColor Yellow
 
 # Удаляем старый архив если есть
@@ -250,55 +252,48 @@ $fileSizeMB = [math]::Round($fileSize / 1MB, 2)
 Write-Host "   📊 Размер архива: $fileSizeMB MB" -ForegroundColor Gray
 Write-Host ""
 
-# 9. Создаём shell.json для обновлений
-Write-Host "📝 Создание shell.json..." -ForegroundColor Yellow
+# 8. Копируем файлы в репозиторий Quty.Launch.Server
+Write-Host "📁 Копирование файлов в Quty.Launch.Server..." -ForegroundColor Yellow
 
-# Формируем ссылку на скачивание (используем raw.githubusercontent.com)
-$repoUrl = "https://raw.githubusercontent.com/Sanya2104/Quty.Launch.Shell.QutyAuto/main"
-$downloadUrl = "$repoUrl/$OUTPUT_FILE"
+$serverShellsDir = Join-Path $SERVER_REPO_PATH "store\shells"
+$targetShellDir = Join-Path $serverShellsDir $PROJECT_NAME
 
-# Создаём объект для shell.json
-$shellJson = @{
-    name = $PROJECT_NAME
-    version = $newVersion
-    downloadUrl = $downloadUrl
-    changelog = $changelog
-    fileSize = "$fileSizeMB MB"
+# Создаём папку store/shells/<PROJECT_NAME>/ если её ещё нет
+if (-not (Test-Path $targetShellDir)) {
+    New-Item -Path $targetShellDir -ItemType Directory -Force | Out-Null
+    Write-Host "   📂 Создана папка: store/shells/$PROJECT_NAME/" -ForegroundColor Gray
 }
 
-# Добавляем minQutyLaunchVersion только если она указана
-if ($minQutyLaunchVersion) {
-    $shellJson | Add-Member -MemberType NoteProperty -Name "minQutyLaunchVersion" -Value $minQutyLaunchVersion
+# Копируем .qutyshell
+Copy-Item -Path $OUTPUT_FILE -Destination (Join-Path $targetShellDir $OUTPUT_FILE) -Force
+Write-Host "   ✅ $OUTPUT_FILE → store/shells/$PROJECT_NAME/" -ForegroundColor Green
+
+# Копируем manifest.json
+if (Test-Path "public\manifest.json") {
+    Copy-Item -Path "public\manifest.json" -Destination (Join-Path $targetShellDir "manifest.json") -Force
+    Write-Host "   ✅ manifest.json → store/shells/$PROJECT_NAME/" -ForegroundColor Green
+} else {
+    Write-Host "   ⚠️ manifest.json не найден в public/" -ForegroundColor Yellow
 }
 
-# Преобразуем в JSON с отступами
-$shellJsonContent = $shellJson | ConvertTo-Json -Depth 10
-
-# Сохраняем без BOM
-$utf8NoBom = New-Object System.Text.UTF8Encoding $false
-[System.IO.File]::WriteAllText("shell.json", $shellJsonContent, $utf8NoBom)
-
-Write-Host "   ✅ shell.json создан" -ForegroundColor Green
-Write-Host ""
-
-# 10. Копируем файлы в корень проекта (исправлено!)
-Write-Host "📁 Копирование файлов в корень проекта..." -ForegroundColor Yellow
-
-# Проверяем, что файл существует и не пытаемся скопировать сам в себя
-# Просто проверяем, что файл уже в корне (он там и создался)
-if (Test-Path $OUTPUT_FILE) {
-    # Файл уже в корне, ничего не делаем
-    Write-Host "   ✅ $OUTPUT_FILE уже в корне проекта" -ForegroundColor Green
+# Копируем preview (любой из preview.png / preview.jpg / preview.ico)
+$previewCopied = $false
+foreach ($ext in @("png", "jpg", "ico")) {
+    $previewSource = "public\preview.$ext"
+    if (Test-Path $previewSource) {
+        Copy-Item -Path $previewSource -Destination (Join-Path $targetShellDir "preview.$ext") -Force
+        Write-Host "   ✅ preview.$ext → store/shells/$PROJECT_NAME/" -ForegroundColor Green
+        $previewCopied = $true
+        break
+    }
 }
-
-# shell.json тоже уже в корне
-if (Test-Path "shell.json") {
-    Write-Host "   ✅ shell.json уже в корне проекта" -ForegroundColor Green
+if (-not $previewCopied) {
+    Write-Host "   ⚠️ Превью не найдено в public/ (preview.png / .jpg / .ico)" -ForegroundColor Yellow
 }
 
 Write-Host ""
 
-# 11. Удаляем временную папку
+# 9. Удаляем временную папку
 Write-Host "🧹 Очистка временных файлов..." -ForegroundColor Yellow
 if (Test-Path $TEMP_DIR) {
     Remove-Item -Path $TEMP_DIR -Recurse -Force
@@ -306,14 +301,15 @@ if (Test-Path $TEMP_DIR) {
 Write-Host "   ✅ Временная папка удалена" -ForegroundColor Green
 Write-Host ""
 
-# 12. Выводим итоговую информацию
+# 10. Выводим итоговую информацию
 Write-Host "==================================================" -ForegroundColor Cyan
 Write-Host "  ✅ СБОРКА ЗАВЕРШЕНА УСПЕШНО!" -ForegroundColor Green
 Write-Host "==================================================" -ForegroundColor Cyan
 Write-Host ""
-Write-Host "📦 Итоговые файлы:" -ForegroundColor Yellow
-Write-Host "   📄 $OUTPUT_FILE ($fileSizeMB MB)" -ForegroundColor White
-Write-Host "   📄 shell.json" -ForegroundColor White
+Write-Host "📦 Итоговые файлы в Quty.Launch.Server:" -ForegroundColor Yellow
+Write-Host "   store/shells/$PROJECT_NAME/$OUTPUT_FILE ($fileSizeMB MB)" -ForegroundColor White
+Write-Host "   store/shells/$PROJECT_NAME/manifest.json" -ForegroundColor White
+Write-Host "   store/shells/$PROJECT_NAME/preview.*" -ForegroundColor White
 Write-Host ""
 Write-Host "📊 Информация о версии:" -ForegroundColor Yellow
 Write-Host "   Версия оболочки: $newVersion" -ForegroundColor White
@@ -323,14 +319,12 @@ if ($minQutyLaunchVersion) {
     Write-Host "   Минимальная версия Quty.Launch: не указана" -ForegroundColor Gray
 }
 Write-Host ""
-Write-Host "📝 Changelog:" -ForegroundColor Yellow
-Write-Host "   $changelog" -ForegroundColor White
+Write-Host "📌 Что дальше:" -ForegroundColor Yellow
+Write-Host "   1. Закоммить изменения в Quty.Launch.Shell.$PROJECT_NAME" -ForegroundColor White
+Write-Host "   2. Закоммить изменения в Quty.Launch.Server" -ForegroundColor White
+Write-Host "      (git add store/shells/$PROJECT_NAME/ && git commit && git push)" -ForegroundColor Gray
+Write-Host "   3. GitHub Actions автоматически пересоберёт store/shells.json" -ForegroundColor White
 Write-Host ""
-
-Write-Host "🔗 Ссылка для скачивания:" -ForegroundColor Yellow
-Write-Host "   $downloadUrl" -ForegroundColor Gray
-Write-Host ""
-
 Write-Host "==================================================" -ForegroundColor Cyan
 
 Write-Host ""
