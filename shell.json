@@ -1,8 +1,8 @@
 {
-    "changelog":  "Обновление оболочки",
-    "fileSize":  "2.22 MB",
-    "name":  "QutyAuto",
-    "version":  "0.0.7",
-    "downloadUrl":  "https://raw.githubusercontent.com/Sanya2104/Quty.Launch.Shell.QutyAuto/main/QutyAuto.qutyshell",
-    "minQutyLaunchVersion":  "0.0.0"
+  "changelog": "Полноценная оболочка: дашборд, приложения, статус-бар, About",
+  "fileSize": "2.22 MB",
+  "name": "QutyAuto",
+  "version": "0.1.0",
+  "downloadUrl": "https://raw.githubusercontent.com/Sanya2104/Quty.Launch.Shell.QutyAuto/main/QutyAuto.qutyshell",
+  "minQutyLaunchVersion": "0.0.0"
 }

@@ -1,0 +1,101 @@
+/* src/assets/styles/theme.css — семантические токены для light/dark тем */
+
+/* ---- Базовые значения (по умолчанию teal) ---- */
+:root {
+  --scheme-primary: #009688;
+  --scheme-accent: #4CAF50;
+
+  /* Прозрачные варианты для primary/accent */
+  --scheme-primary-012: rgba(0,150,136,0.12);
+  --scheme-primary-020: rgba(0,150,136,0.20);
+  --scheme-primary-035: rgba(0,150,136,0.35);
+  --scheme-accent-012: rgba(76,175,80,0.12);
+  --scheme-accent-016: rgba(76,175,80,0.16);
+  --scheme-accent-020: rgba(76,175,80,0.20);
+  --scheme-accent-035: rgba(76,175,80,0.35);
+
+  /* Текст поверх акцента (автоматически: тёмный или светлый) */
+  --scheme-on-accent: #ffffff;
+}
+
+/* ---- Dark theme (по умолчанию — текущий дизайн) ---- */
+:root[data-theme='dark'] {
+  --th-surface: rgba(16,19,23,0.55);
+  --th-surface-strong: rgba(16,19,23,0.78);
+  --th-surface-soft: rgba(16,19,23,0.35);
+  --th-text: rgba(255,255,255,0.92);
+  --th-text-dim: rgba(255,255,255,0.62);
+  --th-text-faint: rgba(255,255,255,0.38);
+  --th-hover: rgba(255,255,255,0.08);
+  --th-border: rgba(255,255,255,0.14);
+  --th-scrim: rgba(8,10,14,0.45);
+  --th-input-bg: rgba(255,255,255,0.08);
+  --th-input-border: rgba(255,255,255,0.20);
+}
+
+/* ---- Light theme ---- */
+:root[data-theme='light'] {
+  --th-surface: rgba(255,255,255,0.72);
+  --th-surface-strong: rgba(255,255,255,0.90);
+  --th-surface-soft: rgba(255,255,255,0.55);
+  --th-text: rgba(23,26,30,0.92);
+  --th-text-dim: rgba(23,26,30,0.64);
+  --th-text-faint: rgba(23,26,30,0.42);
+  --th-hover: rgba(0,0,0,0.06);
+  --th-border: rgba(0,0,0,0.12);
+  --th-scrim: rgba(244,246,249,0.50);
+  --th-input-bg: rgba(0,0,0,0.05);
+  --th-input-border: rgba(0,0,0,0.15);
+}
+
+/* ---- Semantic utility classes ---- */
+.th-surface {
+  background-color: var(--th-surface) !important;
+}
+.th-surface-strong {
+  background-color: var(--th-surface-strong) !important;
+}
+.th-surface-soft {
+  background-color: var(--th-surface-soft) !important;
+}
+.th-text {
+  color: var(--th-text) !important;
+}
+.th-text-dim {
+  color: var(--th-text-dim) !important;
+}
+.th-text-faint {
+  color: var(--th-text-faint) !important;
+}
+.th-hover:hover {
+  background-color: var(--th-hover) !important;
+}
+.th-border {
+  border-color: var(--th-border) !important;
+}
+.th-divider {
+  background-color: var(--th-border);
+}
+.th-accent-text {
+  color: var(--scheme-accent) !important;
+}
+.th-primary-text {
+  color: var(--scheme-primary) !important;
+}
+.th-bg-accent {
+  background-color: var(--scheme-accent) !important;
+  color: var(--scheme-on-accent) !important;
+}
+.th-bg-accent-soft {
+  background-color: var(--scheme-accent-016) !important;
+}
+.th-active {
+  background-color: var(--scheme-accent) !important;
+  color: var(--scheme-on-accent) !important;
+}
+.th-active:hover {
+  filter: brightness(0.85);
+}
+.th-shadow {
+  box-shadow: 0 0 16px var(--th-scrim) !important;
+}

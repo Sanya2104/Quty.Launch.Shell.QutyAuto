@@ -1,29 +1,22 @@
 <!-- src/screens/Apps/AppsMain.vue -->
 <script setup>
-  import { onMounted, onUnmounted } from 'vue'
+  import { ref, computed, onMounted, onUnmounted } from 'vue'
   import { getApps } from '@/api/apps/getApps'
   import { launchApp } from '@/api/apps/launchApp'
   import { AndroidApiCall, isAndroidAvailable } from '@/utilities/androidApi'
   import { devConsole } from '@/utilities/devConsole'
+  import { subscribeCoreEvent } from '@/utilities/coreEvents'
 
   const { apps, loading, error, loadApps } = getApps()
   const { run: launch } = launchApp()
 
-  // Последнее известное состояние маркера обновления — чтобы
-  // перезагружать список только при реальном изменении (не на каждое
-  // событие onCoreStateChanged)
-  let lastUpdateBadge = null
+  const searchQuery = ref('')
+  const lastUpdateBadge = ref(null)
 
-  // Обработчик ошибки загрузки иконки
   const onIconError = (event) => {
     event.target.style.display = 'none'
   }
 
-  /**
-   * Запрашивает GetCoreState и сравнивает updateBadge с предыдущим.
-   * Если состояние изменилось (обновление появилось/исчезло) —
-   * перезагружает список приложений, чтобы маркер обновился.
-   */
   const checkUpdateBadge = () => {
     if (!isAndroidAvailable()) return
 
@@ -32,8 +25,8 @@
       null,
       (data) => {
         const currentBadge = data?.updateBadge === true
-        if (lastUpdateBadge !== currentBadge) {
-          lastUpdateBadge = currentBadge
+        if (lastUpdateBadge.value !== currentBadge) {
+          lastUpdateBadge.value = currentBadge
           devConsole.info(`🔄 updateBadge → ${currentBadge}, перезапрос GetApps`)
           loadApps(true)
         }
@@ -44,76 +37,62 @@
     )
   }
 
-  /**
-   * Глобальный обработчик onCoreStateChanged от ядра.
-   * Ядро шлёт его при смене языка, темы, появлении обновления и т.д.
-   *
-   * Мы подписаны только на факт изменения — перезапрашиваем
-   * CoreState и сравниваем updateBadge. Если он не изменился —
-   * ничего не делаем (не спамим GetApps).
-   */
-  window.onCoreStateChanged = () => {
-    devConsole.info('🔔 onCoreStateChanged')
-    checkUpdateBadge()
-  }
+  /* Подписка на центральный хаб (не перезаписывает обработчик темы) */
+  let unsubscribeCore = null
 
-  // Загружаем приложения
   onMounted(() => {
     loadApps()
-    // Начальное состояние updateBadge — чтобы не сработало ложное
-    // «изменилось» на первом onCoreStateChanged
+    unsubscribeCore = subscribeCoreEvent(checkUpdateBadge)
     if (isAndroidAvailable()) {
-      AndroidApiCall(
-        'GetCoreState',
-        null,
-        (data) => {
-          lastUpdateBadge = data?.updateBadge === true
-        },
-        () => {
-          // Молча игнорируем — не критично для UI
-        }
-      )
+      AndroidApiCall('GetCoreState', null, (data) => {
+        lastUpdateBadge.value = data?.updateBadge === true
+      })
     }
   })
 
   onUnmounted(() => {
-    // Снимаем глобальный обработчик, чтобы не мешал другим экранам.
-    // Если ядро пошлёт onCoreStateChanged, когда AppsMain не открыт —
-    // мы просто ничего не сделаем.
-    window.onCoreStateChanged = null
+    if (unsubscribeCore) unsubscribeCore()
   })
 
-  /**
-   * Возвращает цвет маркера в виде CSS-строки.
-   *
-   * Приоритет:
-   * 1. app.badgeColorHex — готовый HEX от ядра (BadgeHelper).
-   * 2. app.badgeColor — семантика ("accent" | "warning" | "error").
-   *    Fallback-маппинг на случай, если HEX не пришёл.
-   * 3. #009688 — дефолтный accent (status_accent).
-   */
   const getBadgeColor = (app) => {
-    // 1. Готовый HEX от ядра
-    if (app.badgeColorHex) {
-      return app.badgeColorHex
-    }
-
-    // 2. Fallback: семантика → HEX
+    if (app.badgeColorHex) return app.badgeColorHex
     switch (app.badgeColor) {
       case 'error':
-        return '#F44336' // status_error
+        return '#F44336'
       case 'warning':
-        return '#FF9800' // status_warning
-      case 'accent':
+        return '#FF9800'
       default:
-        return '#009688' // status_accent
+        return '#009688'
     }
   }
+
+  /* отфильтрованный список */
+  const filteredApps = computed(() => {
+    if (!searchQuery.value.trim()) return apps.value
+    const q = searchQuery.value.toLowerCase()
+    return apps.value.filter((app) => app.name.toLowerCase().includes(q))
+  })
 </script>
 
 <template>
-  <div class="apps-main bg-light-060 filter-blur-normal rounded-normal">
-    <h1 class="apps-title color-light-080">📱 Приложения</h1>
+  <div class="apps-main th-surface filter-blur-normal rounded-normal">
+    <!-- Поиск -->
+    <div class="mb-15 d-flex gap-10">
+      <input
+        v-model="searchQuery"
+        type="text"
+        placeholder="Поиск приложений..."
+        class="flex-1 rounded-sm px-15 py-10 th-text font-size-16"
+        style="outline: none; border-radius: 8px"
+      />
+      <button
+        v-if="searchQuery"
+        class="th-surface-soft rounded-sm px-15 py-10 th-text-dim transition-03 th-hover"
+        @click="searchQuery = ''"
+      >
+        Очистить
+      </button>
+    </div>
 
     <!-- Состояние загрузки -->
     <div v-if="loading" class="loading-state">
@@ -128,35 +107,39 @@
     </div>
 
     <!-- Список приложений -->
-    <div v-else class="apps-grid">
-      <div
-        v-for="app in apps"
-        :key="app.packageName"
-        class="app-item"
-        :data-custom="app.isCustom"
-        @click="launch(app.packageName)"
-      >
-        <div class="app-icon">
-          <img
-            v-if="app.iconBase64"
-            :src="`data:image/png;base64,${app.iconBase64}`"
-            :alt="app.name"
-            loading="lazy"
-            @error="onIconError"
-          />
-          <span v-else class="emoji-placeholder">
-            {{ app.isCustom ? '⚙️' : '📱' }}
-          </span>
+    <div v-else>
+      <div v-if="filteredApps.length === 0" class="text-align-center py-50 th-text-dim">
+        <p class="font-size-18">Ничего не найдено</p>
+        <p class="font-size-14 mt-10">Попробуйте другой запрос</p>
+      </div>
 
-          <!-- Маркер (badge): точка в правом верхнем углу иконки -->
-          <span
-            v-if="app.badge"
-            class="app-badge"
-            :style="{ backgroundColor: getBadgeColor(app) }"
-            :aria-label="'Update available'"
-          ></span>
+      <div v-else class="apps-grid">
+        <div
+          v-for="app in filteredApps"
+          :key="app.packageName"
+          class="app-item"
+          :data-custom="app.isCustom"
+          @click="launch(app.packageName)"
+        >
+          <div class="app-icon">
+            <img
+              v-if="app.iconBase64"
+              :src="`data:image/png;base64,${app.iconBase64}`"
+              :alt="app.name"
+              loading="lazy"
+              @error="onIconError"
+            />
+            <span v-else class="emoji-placeholder">
+              {{ app.isCustom ? '⚙️' : '📱' }}
+            </span>
+            <span
+              v-if="app.badge"
+              class="app-badge"
+              :style="{ backgroundColor: getBadgeColor(app) }"
+            ></span>
+          </div>
+          <span class="app-name th-text-dim">{{ app.name }}</span>
         </div>
-        <span class="app-name color-coolgray-080">{{ app.name }}</span>
       </div>
     </div>
   </div>
@@ -169,10 +152,14 @@
     overflow-y: auto;
   }
 
-  .apps-title {
-    font-size: 24px;
-    margin-bottom: 20px;
-    font-weight: 500;
+  /* Поиск */
+  input[type='text'] {
+    background: var(--th-input-bg) !important;
+    border: 1px solid var(--th-input-border) !important;
+    color: var(--th-text) !important;
+  }
+  input[type='text']::placeholder {
+    color: var(--th-text-faint);
   }
 
   /* Состояние загрузки */
@@ -182,14 +169,14 @@
     align-items: center;
     justify-content: center;
     height: 200px;
-    color: rgba(255, 255, 255, 0.7);
+    color: var(--th-text-dim);
   }
 
   .spinner {
     width: 40px;
     height: 40px;
-    border: 3px solid rgba(255, 255, 255, 0.3);
-    border-top-color: #fff;
+    border: 3px solid var(--th-border);
+    border-top-color: var(--th-text);
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
     margin-bottom: 10px;
@@ -201,7 +188,7 @@
     }
   }
 
-  /* Состояние ошибки */
+  /* Ошибка */
   .error-state {
     display: flex;
     flex-direction: column;
@@ -219,23 +206,19 @@
 
   .retry-button {
     padding: 8px 20px;
-    background: rgba(255, 255, 255, 0.2);
+    background: var(--th-surface-soft);
     border: none;
     border-radius: 5px;
     cursor: pointer;
     transition: all 0.2s;
+    color: var(--th-text);
   }
 
   .retry-button:hover {
-    background: rgba(255, 255, 255, 0.3);
-    transform: scale(1.02);
+    background: var(--th-hover);
   }
 
-  .retry-button:active {
-    transform: scale(0.98);
-  }
-
-  /* Сетка приложений */
+  /* Сетка */
   .apps-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(90px, 100px));
@@ -251,13 +234,12 @@
     cursor: pointer;
     transition: all 0.2s ease;
     border-radius: 16px;
-    background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(5px);
+    background: transparent;
   }
 
   .app-item:hover {
     transform: translateY(-2px);
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--th-hover);
   }
 
   .app-item:active {
@@ -271,7 +253,6 @@
     align-items: center;
     justify-content: center;
     margin-bottom: 8px;
-    /* Маркер позиционируется абсолютно внутри этого контейнера */
     position: relative;
   }
 
@@ -285,7 +266,6 @@
     font-size: 40px;
   }
 
-  /* Маркер (badge): точка в правом верхнем углу иконки */
   .app-badge {
     position: absolute;
     top: 0;
@@ -293,7 +273,6 @@
     width: 12px;
     height: 12px;
     border-radius: 50%;
-    /* Белая обводка — чтобы маркер читался на любой иконке */
     box-shadow: 0 0 0 2px rgba(20, 20, 20, 0.6);
     pointer-events: none;
     z-index: 2;
@@ -306,16 +285,14 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    font-weight: 400;
   }
 
-  /* Кастомные приложения */
   .app-item[data-custom='true'] {
-    background: rgba(255, 193, 7, 0.12);
-    border: 1px solid rgba(255, 193, 7, 0.3);
+    background: var(--scheme-accent-012);
+    border: 1px solid var(--scheme-accent-035);
   }
 
   .app-item[data-custom='true']:hover {
-    background: rgba(255, 193, 7, 0.2);
+    background: var(--scheme-accent-020);
   }
 </style>

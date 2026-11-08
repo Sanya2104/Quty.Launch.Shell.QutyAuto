@@ -122,9 +122,9 @@
       case 'error':
         return 'bg-red-040 color-dark-080'
       case 'all':
-        return 'bg-light-060 color-dark-080'
+        return 'th-active'
       default:
-        return 'bg-light-010 color-light-080'
+        return 'th-surface-soft th-text-dim'
     }
   }
 
@@ -144,19 +144,17 @@
   <!-- Кнопка открытия -->
   <div
     v-show="!isPanelVisible"
-    class="filter-blur-normal px-10 py-15 position-fixed top-percent-50 right-10 z-index-1000 transition-03 rounded-sm"
-    :class="[`bg-light-040`]"
+    class="filter-blur-normal px-10 py-15 position-fixed top-percent-50 right-10 z-index-1000 transition-03 rounded-sm th-surface th-hover"
     style="transform: translateY(-50%)"
     @click="togglePanel"
   >
-    <IconOpen :size="20" :class="[`color-dark-070`]" />
+    <IconOpen :size="20" class="th-text-dim" />
   </div>
 
   <!-- Панель -->
   <div
     id="Console"
-    class="filter-blur-normal position-fixed top-10 right-10 bottom-10 z-index-1000 transition-03 rounded-normal d-grid ml-10"
-    :class="[`bg-light-080`]"
+    class="filter-blur-normal position-fixed top-10 right-10 bottom-10 z-index-1000 transition-03 rounded-normal d-grid ml-10 th-surface-strong"
     :style="{
       gridTemplateRows: 'auto auto 1fr',
       minWidth: isPanelVisible ? '35%' : '0',
@@ -170,9 +168,9 @@
       <nav class="nav nav-pills col">
         <li class="nav-item px-15">
           <div class="nav-link d-flex align-items-center">
-            <IconConsole :size="26" :class="[`color-dark-070`]" />
-            <span class="ml-15 font-size-18" :class="[`color-dark-100`]"> Консоль </span>
-            <span v-if="stats.total > 0" class="ml-15 font-size-14" :class="[`color-dark-060`]">
+            <IconConsole :size="26" class="th-text" />
+            <span class="ml-15 font-size-18 th-text"> Консоль </span>
+            <span v-if="stats.total > 0" class="ml-15 font-size-14 th-text-dim">
               [ {{ stats.total }} ]
             </span>
           </div>
@@ -182,23 +180,23 @@
         <!-- Кнопка очистки -->
         <li class="nav-item px-15" @click="clearAllLogs">
           <div class="nav-link d-flex align-items-center">
-            <IconCheck v-if="clearSuccess" :size="26" :class="[`color-green-070`]" />
-            <IconClear v-else :size="26" :class="[`color-dark-070`]" />
+            <IconCheck v-if="clearSuccess" :size="26" class="color-green-070" />
+            <IconClear v-else :size="26" class="th-text-dim" />
           </div>
         </li>
 
         <!-- Кнопка копирования -->
         <li class="nav-item px-15" @click="copyAllLogs">
           <div class="nav-link d-flex align-items-center">
-            <IconCheck v-if="copySuccess" :size="26" :class="[`color-green-070`]" />
-            <IconCopy v-else :size="26" :class="[`color-dark-070`]" />
+            <IconCheck v-if="copySuccess" :size="26" class="color-green-070" />
+            <IconCopy v-else :size="26" class="th-text-dim" />
           </div>
         </li>
 
         <!-- Кнопка закрытия -->
         <li class="nav-item px-15" @click="togglePanel">
           <div class="nav-link">
-            <IconClose :size="26" :class="[`color-dark-070`]" />
+            <IconClose :size="26" class="th-text-dim" />
           </div>
         </li>
       </nav>
@@ -210,7 +208,7 @@
         v-for="filter in filters"
         :key="filter"
         class="px-15 py-5 rounded-sm font-size-14 transition-03 d-flex align-items-center"
-        :class="[activeFilter === filter ? getFilterClass(filter) : 'bg-light-010 color-dark-080']"
+        :class="[activeFilter === filter ? getFilterClass(filter) : 'th-surface-soft th-text-dim']"
         @click="setFilter(filter)"
       >
         <component
@@ -231,21 +229,20 @@
       <div
         v-for="log in logs"
         :key="log.groupKey + log.timestamp"
-        class="mb-10 font-size-16 p-10 filter-blur-normal rounded-sm"
-        :class="[`bg-light-020`]"
+        class="mb-10 font-size-16 p-10 filter-blur-normal rounded-sm th-surface-soft"
         :style="{
           'border-left': `5px solid ${log.color}`,
         }"
       >
         <div class="pb-10 d-flex flex-wrap-wrap align-items-center gap-10">
-          <span class="font-size-14 font-weight-bolder" :class="[`color-dark-070`]">
+          <span class="font-size-14 font-weight-bolder th-text">
             {{ log.type.toUpperCase() }}
           </span>
 
-          <span class="font-size-14" :class="[`color-dark-060`]">
+          <span class="font-size-14 th-text-faint">
             {{ log.timestamp }}
           </span>
-          <span v-if="log.file !== 'unknown'" class="font-size-14" :class="[`color-dark-060`]">
+          <span v-if="log.file !== 'unknown'" class="font-size-14 th-text-faint">
             {{ log.file }}:{{ log.line }}
           </span>
 
@@ -259,7 +256,7 @@
           </span>
         </div>
 
-        <div class="font-size-16 mt-10" :class="[`color-dark-080`]">
+        <div class="font-size-16 mt-10 th-text">
           <pre v-if="typeof log.message === 'object'">{{
             JSON.stringify(log.message, null, 2)
           }}</pre>
@@ -268,7 +265,7 @@
       </div>
 
       <!-- Пустое состояние -->
-      <div v-if="!logs.length" class="text-align-center py-50" :class="[`color-dark-080`]">
+      <div v-if="!logs.length" class="text-align-center py-50 th-text-dim">
         <IconConsole :size="48" class="opacity-30" />
         <p class="font-size-16 mt-15">Нет сообщений</p>
         <p v-if="activeFilter !== 'all'" class="font-size-14 mt-15">Попробуйте изменить фильтр</p>

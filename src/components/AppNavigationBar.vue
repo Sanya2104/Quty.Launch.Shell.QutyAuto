@@ -1,104 +1,39 @@
-<!-- src/components/AppNavigationBar.vue-->
+<!-- src/components/AppNavigationBar.vue -->
 <script setup>
-  import { useRouter } from 'vue-router'
-  import { devConsole } from '@/utilities/devConsole'
+  import { useRouter, useRoute } from 'vue-router'
+  import { computed } from 'vue'
 
-  /* маршрутизация */
   const router = useRouter()
+  const route = useRoute()
 
-  /* иконки */
-  import {
-    IconSquare as IconHome,
-    IconLayoutGrid as IconApps,
-    IconChevronDown as IconMore,
-    IconVolume as IconVolume,
-    IconWifi as IconWifi,
-    IconSatellite as IconGps,
-    IconBell as IconNotify,
-  } from '@tabler/icons-vue'
+  const navItems = [
+    { name: 'home', label: 'Главная', icon: 'IconHome', path: '/home' },
+    { name: 'apps', label: 'Приложения', icon: 'IconLayoutGrid', path: '/apps' },
+    { name: 'about', label: 'О системе', icon: 'IconInfoCircle', path: '/about' },
+  ]
 
-  /* обработчик вызова меню */
-  const handleMenuClick = async (item) => {
-    if (item) {
-      try {
-        await router.push(item)
-      } catch (err) {
-        if (!err.message.includes('Avoided redundant navigation')) {
-          devConsole.error('Сбой подключения маршрутизатора:', err)
-        }
-      }
-    } else {
-      devConsole.log('Запрос: ' + item)
-    }
+  const activeNav = computed(() => {
+    return navItems.find((item) => item.path === route.path)?.name || 'home'
+  })
+
+  const handleNavClick = (path) => {
+    router.push(path)
   }
 </script>
 
 <template>
-  <div id="AppNavigationBar" class="w-full h-auto row justify-between px-10 py-15">
-    <!---->
-    <nav class="nav nav-pills col-auto mx-5 px-5 bg-light-060 filter-blur-normal rounded-normal">
-      <li class="nav-item px-15 py-15" @click="handleMenuClick('../')">
-        <IconHome :size="26" />
-      </li>
-      <li class="nav-item px-15 py-15" @click="handleMenuClick('/apps')">
-        <IconApps :size="26" />
-      </li>
-    </nav>
-
-    <!---->
-    <nav
-      class="nav nav-pills col mx-5 px-5 bg-light-060 filter-blur-normal rounded-normal phone-d-none tablet-d-flex desktop-d-flex"
-    >
-      <!-- <li class="nav-item px-10 py-10">
-        <img
-          :src="icon_fuel"
-          alt="icon_fuel"
-          class="w-var h-var object-fit-contain bg-light-040 rounded-md"
-          style="--w: 36px; --h: 36px"
-        />
-      </li> -->
-    </nav>
-
-    <!---->
-    <nav
-      class="nav nav-pills col-auto mx-5 px-5 bg-light-060 filter-blur-normal rounded-normal phone-d-none tablet-d-flex desktop-d-flex"
-    >
-      <li class="nav-item px-15 py-15">
-        <IconMore :size="26" />
-      </li>
-      <li class="nav-item px-15 py-15">
-        <IconVolume :size="26" />
-      </li>
-      <li class="nav-item px-15 py-15">
-        <IconWifi :size="26" />
-      </li>
-      <li class="nav-item px-15 py-15">
-        <IconGps :size="26" />
+  <div id="AppNavigationBar" class="w-full h-auto row justify-between px-10 py-10">
+    <nav class="nav nav-pills col-auto mx-auto th-surface filter-blur-normal rounded-normal">
+      <li
+        v-for="item in navItems"
+        :key="item.name"
+        class="nav-item px-20 py-10 rounded-sm transition-03"
+        :class="activeNav === item.name ? 'th-active' : 'th-text-dim th-hover'"
+        @click="handleNavClick(item.path)"
+      >
+        <span class="font-size-16 font-weight-bolder">{{ item.label }}</span>
       </li>
     </nav>
-
-    <!---->
-    <nav
-      class="nav nav-pills col-auto mx-5 bg-light-060 filter-blur-normal rounded-normal phone-d-none tablet-d-flex desktop-d-flex"
-    >
-      <li class="nav-item px-15 py-15">
-        <span class="h-var d-flex align-self-center" style="--h: 26px">
-          <span class="mr-10">Ср, 8 Июля</span>
-          <span>22:17</span>
-        </span>
-      </li>
-    </nav>
-
-    <!---->
-    <nav
-      class="nav nav-pills col-auto mx-5 bg-light-060 filter-blur-normal rounded-normal phone-d-none tablet-d-flex desktop-d-flex"
-    >
-      <li class="nav-item px-15 py-15">
-        <IconNotify :size="26" />
-      </li>
-    </nav>
-
-    <!---->
   </div>
 </template>
 

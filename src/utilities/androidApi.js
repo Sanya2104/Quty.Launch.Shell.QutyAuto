@@ -2,51 +2,118 @@
 
 import { devConsole } from '@/utilities/devConsole'
 
-// Заглушка списка приложений
+// ============================================================
+// Виртуальные пакеты ядра (ApiConfig.kt).
+// Это не настоящие приложения — ядро открывает по ним свои
+// активности через LaunchApp.
+// ============================================================
+export const VIRTUAL_PACKAGES = {
+  SETTINGS: 'by.quty.launch.settings',
+  STORE: 'by.quty.launch.store',
+  TERMINAL: 'by.quty.launch.terminal',
+  LOGGER: 'by.quty.launch.logger',
+}
+
+// Заглушка GetApps — поле за полем повторяет api/model/AppInfo.kt
 export const mockApps = [
   {
-    packageName: 'by.quty.launch.settings',
-    name: 'Настройки лаунчера',
+    packageName: VIRTUAL_PACKAGES.SETTINGS,
+    name: 'Настройки Quty.Launch',
     iconBase64: '',
     isCustom: true,
+    badge: false,
+    badgeColor: null,
+    badgeColorHex: null,
   },
-
+  {
+    packageName: VIRTUAL_PACKAGES.STORE,
+    name: 'Магазин Quty.Launch',
+    iconBase64: '',
+    isCustom: true,
+    badge: false,
+    badgeColor: null,
+    badgeColorHex: null,
+  },
   {
     packageName: 'com.android.chrome',
     name: 'Chrome',
     iconBase64: '',
     isCustom: false,
+    badge: false,
+    badgeColor: null,
+    badgeColorHex: null,
   },
-
   {
     packageName: 'com.android.messaging',
     name: 'Сообщения',
     iconBase64: '',
     isCustom: false,
+    badge: false,
+    badgeColor: null,
+    badgeColorHex: null,
   },
-
   {
     packageName: 'com.android.camera',
     name: 'Камера',
     iconBase64: '',
     isCustom: false,
+    badge: false,
+    badgeColor: null,
+    badgeColorHex: null,
   },
 ]
 
-// Заглушка статусов для AppBar
+// Заглушка GetStatusBar — строго поля api/model/StatusBarInfo.kt.
+// Полей notify/checkEngine в ядре нет, поэтому их нет и здесь.
 export const mockStatusBar = {
-  notify: true, // Уведомления
-  checkEngine: true, // включен/выключен
-  internetSpeed: '1.2 MB/s', // Тестовая скорость
-  cpuTemp: '57 °C', // Температура CPU
-  volume: '33', // Громкость
-  gsmSignal: 4, // Уровень сигнала GSM (0-4)
-  gsmNetworkType: '4G', // тип сети (2G, 3G, 4G, 5G, H+)
-  wifiSignalLevel: 4, // уровень сигнала Wi-Fi (0-4)
-  wifi: true, // включен/выключен
-  bluetooth: true, // включен/выключен
-  usbConnected: true, // есть/нету подключений
-  gps: true, // включен/выключен
+  cpuTemp: '57°C',
+  internetSpeed: '1.2 MB/s',
+  volume: '33',
+  gsmSignal: 4,
+  gsmNetworkType: '4G',
+  wifiSignalLevel: 4,
+  bluetooth: true,
+  wifi: true,
+  gps: true,
+  usbConnected: true,
+}
+
+// Заглушка GetSystemInfo — api/model/SystemInfo.kt
+export const mockSystemInfo = {
+  device: 'SDK Build (эмулятор)',
+  version: '15',
+}
+
+// Заглушка GetCoreState — строго поля api/model/CoreStateInfo.kt
+export const mockCoreState = {
+  theme: 'dark',
+  themeMode: 'system',
+  language: 'ru',
+  locale: 'ru-RU',
+  orientation: 'sensor',
+  fullscreen: true,
+  strictMode: false,
+  animationsEnabled: true,
+  updateBadge: false,
+  updateBadgeColor: null,
+  updateBadgeColorHex: null,
+  safeModeActive: false,
+  colorScheme: {
+    id: 'teal',
+    primary: '#009688',
+    accent: '#4CAF50',
+  },
+  shell: {
+    name: 'QutyAuto',
+    displayName: 'QutyAuto',
+    version: '0.1.0',
+    author: 'QutyTeam',
+    orientation: 'sensor',
+  },
+  app: {
+    version: '0.0.0',
+    versionCode: 1,
+  },
 }
 
 // Проверка доступности окружения Android API

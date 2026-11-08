@@ -4,9 +4,9 @@ import { createRouter, createWebHashHistory } from 'vue-router'
 
 // импорты скринов
 import HomeMain from '@/screens/Home/HomeMain.vue'
-import HomeGeneral from '@/screens/Home/HomeGeneral.vue'
-import ErrorMain from '@/screens/Error/ErrorMain.vue'
 import AppsMain from '@/screens/Apps/AppsMain.vue'
+import AboutMain from '@/screens/About/AboutMain.vue'
+import ErrorMain from '@/screens/Error/ErrorMain.vue'
 
 // маршруты
 const router = createRouter({
@@ -23,19 +23,11 @@ const router = createRouter({
     {
       path: '/home',
       name: 'home',
+      meta: {
+        title: 'Главная',
+        link: '/home',
+      },
       component: HomeMain,
-      children: [
-        // домашний экран / главная
-        {
-          path: '',
-          name: 'homeGeneral',
-          meta: {
-            title: 'Главная',
-            link: '/home',
-          },
-          component: HomeGeneral,
-        },
-      ],
     },
 
     // приложения
@@ -47,6 +39,17 @@ const router = createRouter({
         link: '/apps',
       },
       component: AppsMain,
+    },
+
+    // о системе
+    {
+      path: '/about',
+      name: 'about',
+      meta: {
+        title: 'О системе',
+        link: '/about',
+      },
+      component: AboutMain,
     },
 
     // экран ошибки маршрута

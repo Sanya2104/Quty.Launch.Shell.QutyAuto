@@ -33,13 +33,11 @@ export function getApps() {
       AndroidApiCall(
         'GetApps',
         null,
-        // onSuccess
         (data) => {
           apps.value = data || []
           devConsole.info(`✅ Загружено приложений: ${apps.value.length}`)
           loading.value = false
         },
-        // onError
         (err) => {
           devConsole.error('❌ Ошибка загрузки приложений:', err)
           error.value = err || 'Не удалось загрузить список приложений'

@@ -4,6 +4,13 @@
     "preview":  "preview.png",
     "orientation":  "sensor",
     "repoUrl":  "https://raw.githubusercontent.com/Sanya2104/Quty.Launch.Shell.QutyAuto/main/",
-    "version":  "0.0.7",
+    "apiMethods":  [
+                       "GetSystemInfo",
+                       "GetApps",
+                       "LaunchApp",
+                       "GetStatusBar",
+                       "GetCoreState"
+                   ],
+    "version":  "0.1.0",
     "minQutyLaunchVersion":  "0.0.0"
 }

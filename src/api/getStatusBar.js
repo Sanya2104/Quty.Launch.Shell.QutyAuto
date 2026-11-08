@@ -5,10 +5,8 @@ import { devConsole } from '@/utilities/devConsole'
 
 export function getStatus() {
   const status = ref({
-    notify: null,
-    checkEngine: null,
-    internetSpeed: null,
     cpuTemp: null,
+    internetSpeed: null,
     volume: null,
     gsmSignal: null,
     gsmNetworkType: null,
