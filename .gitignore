@@ -144,3 +144,6 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+# Собранный пакет оболочки (бинарный артефакт, деплоится в Server/store)
+*.qutyshell

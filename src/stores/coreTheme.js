@@ -5,7 +5,7 @@
 import { ref, computed } from 'vue'
 import { getCoreState } from '@/api/getCoreState'
 import { applyCoreTheme } from '@/utilities/theme'
-import { subscribeCoreEvent } from '@/utilities/coreEvents'
+import { subscribeCoreEvent, subscribeShellResume } from '@/utilities/coreEvents'
 import { isAndroidAvailable } from '@/utilities/androidApi'
 
 /* Цветовые схемы ядра (ColorSchemeModel.getAllSchemes) — для dev-превью в браузере */
@@ -25,15 +25,33 @@ const { state, loadState } = getCoreState()
 
 const ready = ref(false)
 let initialized = false
+let loading = false
 
 function apply() {
   applyCoreTheme(state.value)
 }
 
 async function refresh(force = true) {
+  /* Защита от параллельных вызовов (resume + poll + push могут сработать вместе) */
+  if (loading) return
+  loading = true
+
+  /* В браузере ядра нет: мок применяем один раз при init,
+     иначе периодические обновления сбрасывали бы dev-превью темы/схемы */
+  if (!isAndroidAvailable()) {
+    if (!ready.value) {
+      await loadState(force)
+      apply()
+      ready.value = true
+    }
+    loading = false
+    return
+  }
+
   await loadState(force)
   apply()
   ready.value = true
+  loading = false
 }
 
 export function useCoreTheme() {
@@ -46,6 +64,25 @@ export function useCoreTheme() {
 
     /* Ядро шлёт onCoreStateChanged при смене темы/языка/схемы в Настройках */
     subscribeCoreEvent(() => refresh(true))
+
+    /* Ядро НЕ уведомляет о смене цветовой схемы (она перекрашивает только
+       SettingsActivity), поэтому перечитываем GetCoreState при возврате на оболочку.
+       Первый pageshow происходит и при стартовой загрузке — до готовности
+       игнорируем, иначе был бы дублирующий запрос сразу после init */
+    subscribeShellResume(() => {
+      if (!ready.value) return
+      refresh(true)
+    })
+
+    /* Страховка: MainActivity не вызывает webView.onPause(), поэтому DOM-событие
+       о возврате может не прийти. Периодически перечитываем состояние,
+       пока оболочка видима. GetCoreState дешёвый, интервал 30 сек — компромисс
+       между отзывчивостью смены цветовой схемы и нагрузкой на IPC */
+    if (isAndroidAvailable()) {
+      setInterval(() => {
+        if (document.visibilityState === 'visible') refresh(true)
+      }, 30_000)
+    }
 
     refresh(true)
   }

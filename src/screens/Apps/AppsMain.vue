@@ -1,57 +1,36 @@
 <!-- src/screens/Apps/AppsMain.vue -->
 <script setup>
-  import { ref, computed, onMounted, onUnmounted } from 'vue'
+  import { ref, computed, watch, onMounted } from 'vue'
   import { getApps } from '@/api/apps/getApps'
   import { launchApp } from '@/api/apps/launchApp'
-  import { AndroidApiCall, isAndroidAvailable } from '@/utilities/androidApi'
+  import { useCoreTheme } from '@/stores/coreTheme'
   import { devConsole } from '@/utilities/devConsole'
-  import { subscribeCoreEvent } from '@/utilities/coreEvents'
 
   const { apps, loading, error, loadApps } = getApps()
   const { run: launch } = launchApp()
 
+  /* Общий стейт ядра: updateBadge читается из него, отдельный GetCoreState не нужен */
+  const { state: coreState } = useCoreTheme()
+
   const searchQuery = ref('')
-  const lastUpdateBadge = ref(null)
 
   const onIconError = (event) => {
     event.target.style.display = 'none'
   }
 
-  const checkUpdateBadge = () => {
-    if (!isAndroidAvailable()) return
-
-    AndroidApiCall(
-      'GetCoreState',
-      null,
-      (data) => {
-        const currentBadge = data?.updateBadge === true
-        if (lastUpdateBadge.value !== currentBadge) {
-          lastUpdateBadge.value = currentBadge
-          devConsole.info(`🔄 updateBadge → ${currentBadge}, перезапрос GetApps`)
-          loadApps(true)
-        }
-      },
-      (err) => {
-        devConsole.warn('⚠️ GetCoreState (для updateBadge) не удался:', err)
-      }
-    )
-  }
-
-  /* Подписка на центральный хаб (не перезаписывает обработчик темы) */
-  let unsubscribeCore = null
+  /* Ядро проставляет бейдж обновления приложениям, когда updateBadge=true.
+     Реагируем на изменение флага в уже полученном состоянии ядра */
+  watch(
+    () => coreState.value?.updateBadge,
+    (available, previous) => {
+      if (available === previous) return
+      devConsole.info(`🔄 updateBadge → ${available}, перезапрос GetApps`)
+      loadApps(true)
+    }
+  )
 
   onMounted(() => {
     loadApps()
-    unsubscribeCore = subscribeCoreEvent(checkUpdateBadge)
-    if (isAndroidAvailable()) {
-      AndroidApiCall('GetCoreState', null, (data) => {
-        lastUpdateBadge.value = data?.updateBadge === true
-      })
-    }
-  })
-
-  onUnmounted(() => {
-    if (unsubscribeCore) unsubscribeCore()
   })
 
   const getBadgeColor = (app) => {
