@@ -2,7 +2,7 @@
 <script setup>
   import { ref, markRaw, onMounted, onUnmounted, computed } from 'vue'
   import { useRoute } from 'vue-router'
-  import { getStatus } from '@/api/getStatusBar'
+  import { getDeviceStatus } from '@/api/getDeviceStatus'
   import { isAndroidAvailable } from '@/utilities/androidApi'
 
   /* иконки */
@@ -29,7 +29,7 @@
   } from '@tabler/icons-vue'
 
   /* статусбар */
-  const { status, loadStatus, startPolling, stopPolling } = getStatus()
+  const { status, loadStatus, startPolling, stopPolling } = getDeviceStatus()
 
   /* текущее время */
   const currentTime = ref('')

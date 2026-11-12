@@ -1,5 +1,5 @@
 // src/utilities/theme.js — применение темы и цветовой схемы к CSS.
-// Вызывается из stores/coreTheme.js после получения данных из GetCoreState.
+// Вызывается из stores/appTheme.js после получения данных из GetAppState.
 
 import { devConsole } from './devConsole'
 
@@ -35,25 +35,25 @@ function isValidHex(hex) {
 
 /**
  * Применяет тему и цветовую схему ядра к CSS-переменным и атрибутам HTML.
- * @param {object} coreState — объект из GetCoreState (или mockCoreState)
+ * @param {object} appState — объект из GetAppState (или mockAppState)
  */
-export function applyCoreTheme(coreState) {
+export function applyAppTheme(appState) {
   const root = document.documentElement
   if (!root) return
 
   /* Тема: dark по умолчанию */
-  const theme = coreState?.theme === 'light' ? 'light' : 'dark'
+  const theme = appState?.theme === 'light' ? 'light' : 'dark'
   root.dataset.theme = theme
 
   /* Режим темы */
-  root.dataset.themeMode = coreState?.themeMode || 'system'
+  root.dataset.themeMode = appState?.themeMode || 'system'
 
   /* Цветовая схема */
-  const primary = isValidHex(coreState?.colorScheme?.primary)
-    ? coreState.colorScheme.primary
+  const primary = isValidHex(appState?.colorScheme?.primary)
+    ? appState.colorScheme.primary
     : DEFAULT_PRIMARY
-  const accent = isValidHex(coreState?.colorScheme?.accent)
-    ? coreState.colorScheme.accent
+  const accent = isValidHex(appState?.colorScheme?.accent)
+    ? appState.colorScheme.accent
     : DEFAULT_ACCENT
   const onAccent = getOnColor(accent)
 
@@ -73,6 +73,6 @@ export function applyCoreTheme(coreState) {
   root.style.setProperty('--scheme-accent-035', hexToRgba(accent, 0.35))
 
   devConsole.info(
-    `🎨 Тема: ${theme}, схема: ${coreState?.colorScheme?.id || '—'}, primary: ${primary}, accent: ${accent}`
+    `🎨 Тема: ${theme}, схема: ${appState?.colorScheme?.id || '—'}, primary: ${primary}, accent: ${accent}`
   )
 }

@@ -1,19 +1,19 @@
 <!-- src/screens/About/AboutMain.vue -->
 <script setup>
   import { onMounted } from 'vue'
-  import { getSystemInfo } from '@/api/getSystemInfo'
-  import { useCoreTheme, CORE_SCHEMES } from '@/stores/coreTheme'
+  import { getDeviceInfo } from '@/api/getDeviceInfo'
+  import { useAppTheme, APP_SCHEMES } from '@/stores/appTheme'
   import { AndroidApiCall, VIRTUAL_PACKAGES } from '@/utilities/androidApi'
   import { devConsole } from '@/utilities/devConsole'
   import { useRouter } from 'vue-router'
   import { IconSun as IconLight, IconMoon as IconDark } from '@tabler/icons-vue'
 
   const router = useRouter()
-  const { state: coreState, init: initTheme, devSetTheme, devSetScheme, isDev } = useCoreTheme()
-  const { info: sysInfo, loadInfo } = getSystemInfo()
+  const { state: appState, init: initTheme, devSetTheme, devSetScheme, isDev } = useAppTheme()
+  const { info: deviceInfo, loadInfo } = getDeviceInfo()
 
-  /* Тема и схема — из GetCoreState (ядро не даёт менять их из оболочки) */
-  const themeName = () => (coreState.value.theme === 'light' ? 'Светлая' : 'Тёмная')
+  /* Тема и схема — из GetAppState (ядро не даёт менять их из оболочки) */
+  const themeName = () => (appState.value.theme === 'light' ? 'Светлая' : 'Тёмная')
 
   const openCoreSettings = () => {
     AndroidApiCall(
@@ -45,12 +45,12 @@
           <div class="d-flex justify-between">
             <span class="font-size-14 th-text-faint">Версия</span>
             <span class="font-size-14 th-text font-weight-bolder">
-              {{ coreState.shell?.version || '0.1.0' }}
+              {{ appState.shell?.version || '0.1.0' }}
             </span>
           </div>
           <div class="d-flex justify-between">
             <span class="font-size-14 th-text-faint">Автор</span>
-            <span class="font-size-14 th-text">{{ coreState.shell?.author || 'QutyTeam' }}</span>
+            <span class="font-size-14 th-text">{{ appState.shell?.author || 'QutyTeam' }}</span>
           </div>
         </div>
       </div>
@@ -63,7 +63,7 @@
             <span class="font-size-14 th-text-faint">Текущая тема</span>
             <span class="d-flex align-items-center gap-10">
               <component
-                :is="coreState.theme === 'light' ? IconLight : IconDark"
+                :is="appState.theme === 'light' ? IconLight : IconDark"
                 :size="20"
                 class="th-accent-text"
               />
@@ -72,19 +72,19 @@
           </div>
           <div class="d-flex justify-between align-items-center">
             <span class="font-size-14 th-text-faint">Режим</span>
-            <span class="font-size-14 th-text">{{ coreState.themeMode || '—' }}</span>
+            <span class="font-size-14 th-text">{{ appState.themeMode || '—' }}</span>
           </div>
           <div class="d-flex justify-between align-items-center">
             <span class="font-size-14 th-text-faint">Цветовая схема</span>
             <span class="d-flex align-items-center gap-10">
-              <span class="font-size-14 th-text">{{ coreState.colorScheme?.id || '—' }}</span>
+              <span class="font-size-14 th-text">{{ appState.colorScheme?.id || '—' }}</span>
               <span
                 class="scheme-dot"
-                :style="{ backgroundColor: coreState.colorScheme?.primary }"
+                :style="{ backgroundColor: appState.colorScheme?.primary }"
               ></span>
               <span
                 class="scheme-dot"
-                :style="{ backgroundColor: coreState.colorScheme?.accent }"
+                :style="{ backgroundColor: appState.colorScheme?.accent }"
               ></span>
             </span>
           </div>
@@ -98,31 +98,37 @@
       <div class="th-surface filter-blur-normal rounded-normal p-20 overflow-y-auto">
         <h3 class="font-size-18 th-text font-weight-bolder mb-10">Система</h3>
         <div class="d-flex flex-direction-column gap-10">
-          <div v-if="sysInfo.device" class="d-flex justify-between">
-            <span class="font-size-14 th-text-faint">Устройство</span>
-            <span class="font-size-14 th-text">{{ sysInfo.device }}</span>
+          <div v-if="deviceInfo.manufacturer" class="d-flex justify-between">
+            <span class="font-size-14 th-text-faint">Производитель</span>
+            <span class="font-size-14 th-text">{{ deviceInfo.manufacturer }}</span>
           </div>
-          <div v-if="sysInfo.version" class="d-flex justify-between">
+          <div v-if="deviceInfo.model" class="d-flex justify-between">
+            <span class="font-size-14 th-text-faint">Модель</span>
+            <span class="font-size-14 th-text">{{ deviceInfo.model }}</span>
+          </div>
+          <div v-if="deviceInfo.androidVersion" class="d-flex justify-between">
             <span class="font-size-14 th-text-faint">Android</span>
-            <span class="font-size-14 th-text">v{{ sysInfo.version }}</span>
+            <span class="font-size-14 th-text"
+              >v{{ deviceInfo.androidVersion }} (SDK {{ deviceInfo.sdkInt }})</span
+            >
           </div>
-          <div v-if="coreState.app?.version" class="d-flex justify-between">
+          <div v-if="appState.app?.version" class="d-flex justify-between">
             <span class="font-size-14 th-text-faint">Quty.Launch</span>
             <span class="font-size-14 th-text">
-              v{{ coreState.app.version }} ({{ coreState.app.versionCode }})
+              v{{ appState.app.version }} ({{ appState.app.versionCode }})
             </span>
           </div>
-          <div v-if="coreState.language" class="d-flex justify-between">
+          <div v-if="appState.language" class="d-flex justify-between">
             <span class="font-size-14 th-text-faint">Язык</span>
-            <span class="font-size-14 th-text">{{ coreState.locale || coreState.language }}</span>
+            <span class="font-size-14 th-text">{{ appState.locale || appState.language }}</span>
           </div>
           <div class="d-flex justify-between">
             <span class="font-size-14 th-text-faint">Safe Mode</span>
             <span
               class="font-size-14"
-              :class="coreState.safeModeActive ? 'color-red-080' : 'th-accent-text'"
+              :class="appState.safeModeActive ? 'color-red-080' : 'th-accent-text'"
             >
-              {{ coreState.safeModeActive ? 'Вкл' : 'Выкл' }}
+              {{ appState.safeModeActive ? 'Вкл' : 'Выкл' }}
             </span>
           </div>
         </div>
@@ -136,14 +142,14 @@
         <div class="d-flex align-items-center gap-10 mb-10">
           <button
             class="preview-btn"
-            :class="{ 'th-bg-accent': coreState.theme !== 'light' }"
+            :class="{ 'th-bg-accent': appState.theme !== 'light' }"
             @click="devSetTheme('dark')"
           >
             Тёмная
           </button>
           <button
             class="preview-btn"
-            :class="{ 'th-bg-accent': coreState.theme === 'light' }"
+            :class="{ 'th-bg-accent': appState.theme === 'light' }"
             @click="devSetTheme('light')"
           >
             Светлая
@@ -151,10 +157,10 @@
         </div>
         <div class="d-flex flex-wrap-wrap gap-10">
           <button
-            v-for="scheme in CORE_SCHEMES"
+            v-for="scheme in APP_SCHEMES"
             :key="scheme.id"
             class="scheme-btn"
-            :class="{ 'scheme-btn-active': coreState.colorScheme?.id === scheme.id }"
+            :class="{ 'scheme-btn-active': appState.colorScheme?.id === scheme.id }"
             :style="{ backgroundColor: scheme.primary }"
             :title="scheme.id"
             @click="devSetScheme(scheme.id)"

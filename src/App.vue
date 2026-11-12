@@ -9,13 +9,11 @@
   import DevConsole from '@/components/DevConsole.vue'
 
   /* тема ядра (светлая/тёмная + цветовая схема) */
-  import { useCoreTheme } from '@/stores/coreTheme'
+  import { useAppTheme } from '@/stores/appTheme'
+  import { devConsole } from '@/utilities/devConsole'
 
-  /* стили оформления */
-  import '@/assets/styles/main.css'
-
-  const coreTheme = useCoreTheme()
-  coreTheme.init()
+  const appTheme = useAppTheme()
+  appTheme.init()
 </script>
 
 <template>

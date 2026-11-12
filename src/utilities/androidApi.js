@@ -15,11 +15,11 @@ export const VIRTUAL_PACKAGES = {
 }
 
 // Заглушка GetApps — поле за полем повторяет api/model/AppInfo.kt
+// Иконки вынесены в отдельный метод GetAppIcons, здесь их нет.
 export const mockApps = [
   {
     packageName: VIRTUAL_PACKAGES.SETTINGS,
     name: 'Настройки Quty.Launch',
-    iconBase64: '',
     isCustom: true,
     badge: false,
     badgeColor: null,
@@ -28,7 +28,6 @@ export const mockApps = [
   {
     packageName: VIRTUAL_PACKAGES.STORE,
     name: 'Магазин Quty.Launch',
-    iconBase64: '',
     isCustom: true,
     badge: false,
     badgeColor: null,
@@ -37,7 +36,6 @@ export const mockApps = [
   {
     packageName: 'com.android.chrome',
     name: 'Chrome',
-    iconBase64: '',
     isCustom: false,
     badge: false,
     badgeColor: null,
@@ -46,7 +44,6 @@ export const mockApps = [
   {
     packageName: 'com.android.messaging',
     name: 'Сообщения',
-    iconBase64: '',
     isCustom: false,
     badge: false,
     badgeColor: null,
@@ -55,7 +52,6 @@ export const mockApps = [
   {
     packageName: 'com.android.camera',
     name: 'Камера',
-    iconBase64: '',
     isCustom: false,
     badge: false,
     badgeColor: null,
@@ -63,9 +59,8 @@ export const mockApps = [
   },
 ]
 
-// Заглушка GetStatusBar — строго поля api/model/StatusBarInfo.kt.
-// Полей notify/checkEngine в ядре нет, поэтому их нет и здесь.
-export const mockStatusBar = {
+// Заглушка GetDeviceStatus — строго поля api/model/DeviceStatusInfo.kt.
+export const mockDeviceStatus = {
   cpuTemp: '57°C',
   internetSpeed: '1.2 MB/s',
   volume: '33',
@@ -78,14 +73,22 @@ export const mockStatusBar = {
   usbConnected: true,
 }
 
-// Заглушка GetSystemInfo — api/model/SystemInfo.kt
-export const mockSystemInfo = {
-  device: 'SDK Build (эмулятор)',
-  version: '15',
+// Заглушка GetDeviceInfo — api/model/DeviceInfo.kt
+export const mockDeviceInfo = {
+  manufacturer: 'Google',
+  brand: 'google',
+  model: 'sdk_gphone64_x86_64',
+  device: 'sdk_gphone64_x86_64',
+  androidVersion: '15',
+  sdkInt: 35,
+  screenWidthPx: 1080,
+  screenHeightPx: 1920,
+  densityDpi: 420,
+  locale: 'ru-RU',
 }
 
-// Заглушка GetCoreState — строго поля api/model/CoreStateInfo.kt
-export const mockCoreState = {
+// Заглушка GetAppState — строго поля api/model/AppStateInfo.kt
+export const mockAppState = {
   theme: 'dark',
   themeMode: 'system',
   language: 'ru',

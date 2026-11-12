@@ -2,15 +2,17 @@
 <script setup>
   import { ref, computed, watch, onMounted } from 'vue'
   import { getApps } from '@/api/apps/getApps'
+  import { getAppIcons } from '@/api/apps/getAppIcons'
   import { launchApp } from '@/api/apps/launchApp'
-  import { useCoreTheme } from '@/stores/coreTheme'
+  import { useAppTheme } from '@/stores/appTheme'
   import { devConsole } from '@/utilities/devConsole'
 
   const { apps, loading, error, loadApps } = getApps()
+  const { icons, loadIcons } = getAppIcons()
   const { run: launch } = launchApp()
 
-  /* Общий стейт ядра: updateBadge читается из него, отдельный GetCoreState не нужен */
-  const { state: coreState } = useCoreTheme()
+  /* Общий стейт приложения: updateBadge читается из него, отдельный GetAppState не нужен */
+  const { state: appState } = useAppTheme()
 
   const searchQuery = ref('')
 
@@ -19,9 +21,9 @@
   }
 
   /* Ядро проставляет бейдж обновления приложениям, когда updateBadge=true.
-     Реагируем на изменение флага в уже полученном состоянии ядра */
+     Реагируем на изменение флага в уже полученном состоянии приложения */
   watch(
-    () => coreState.value?.updateBadge,
+    () => appState.value?.updateBadge,
     (available, previous) => {
       if (available === previous) return
       devConsole.info(`🔄 updateBadge → ${available}, перезапрос GetApps`)
@@ -29,8 +31,15 @@
     }
   )
 
-  onMounted(() => {
-    loadApps()
+  /* После загрузки списка приложений запрашиваем иконки для видимых пакетов */
+  const loadAppsIcons = (appsList) => {
+    const packages = appsList.map((app) => app.packageName)
+    loadIcons(packages)
+  }
+
+  onMounted(async () => {
+    await loadApps()
+    loadAppsIcons(apps.value)
   })
 
   const getBadgeColor = (app) => {
@@ -102,8 +111,8 @@
         >
           <div class="app-icon">
             <img
-              v-if="app.iconBase64"
-              :src="`data:image/png;base64,${app.iconBase64}`"
+              v-if="icons[app.packageName]"
+              :src="`data:image/png;base64,${icons[app.packageName]}`"
               :alt="app.name"
               loading="lazy"
               @error="onIconError"

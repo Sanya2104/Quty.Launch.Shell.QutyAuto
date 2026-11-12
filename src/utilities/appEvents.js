@@ -1,10 +1,10 @@
-// src/utilities/coreEvents.js — центральный хаб для onCoreStateChanged от ядра.
+// src/utilities/appEvents.js — центральный хаб для onAppStateChanged от ядра.
 // Ядро шлёт это событие при смене темы, языка, появлении обновления и т.д.
-// Все компоненты подписываются через subscribe() вместо прямого присваивания window.onCoreStateChanged.
+// Все компоненты подписываются через subscribe() вместо прямого присваивания window.onAppStateChanged.
 //
 // Дополнительно хаб отслеживает возврат оболочки на экран (visibilitychange/pageshow/focus).
-// Ядро НЕ шлёт onCoreStateChanged при смене цветовой схемы (она применяется только к
-// SettingsActivity), поэтому оболочка сама перечитывает GetCoreState при возврате.
+// Ядро НЕ шлёт onAppStateChanged при смене цветовой схемы (она применяется только к
+// SettingsActivity), поэтому оболочка сама перечитывает GetAppState при возврате.
 
 import { devConsole } from './devConsole'
 
@@ -30,23 +30,23 @@ function scheduleResume(reason) {
   }, 300)
 }
 
-function onCoreStateChanged() {
-  devConsole.info('🔔 onCoreStateChanged')
+function onAppStateChanged() {
+  devConsole.info('🔔 onAppStateChanged')
   listeners.forEach((fn) => {
     try {
       fn()
     } catch (e) {
-      devConsole.error('onCoreStateChanged handler error:', e)
+      devConsole.error('onAppStateChanged handler error:', e)
     }
   })
 }
 
-export function initCoreEvents() {
-  window.onCoreStateChanged = onCoreStateChanged
+export function initAppEvents() {
+  window.onAppStateChanged = onAppStateChanged
 }
 
-export function subscribeCoreEvent(handler) {
-  if (!window.onCoreStateChanged) initCoreEvents()
+export function subscribeAppEvent(handler) {
+  if (!window.onAppStateChanged) initAppEvents()
   listeners.add(handler)
   return () => listeners.delete(handler)
 }

@@ -1,9 +1,9 @@
-// src/api/getCoreState.js
+// src/api/getAppState.js
 import { ref } from 'vue'
-import { isAndroidAvailable, AndroidApiCall, mockCoreState } from '@/utilities/androidApi'
+import { isAndroidAvailable, AndroidApiCall, mockAppState } from '@/utilities/androidApi'
 import { devConsole } from '@/utilities/devConsole'
 
-export function getCoreState() {
+export function getAppState() {
   const state = ref({
     theme: null,
     themeMode: null,
@@ -33,7 +33,7 @@ export function getCoreState() {
 
     if (!isAndroidAvailable()) {
       devConsole.log('🛠️ Режим разработки: используются тестовые данные')
-      state.value = { ...mockCoreState }
+      state.value = { ...mockAppState }
       loading.value = false
       return
     }
@@ -44,21 +44,21 @@ export function getCoreState() {
     try {
       const data = await Promise.race([
         new Promise((resolve, reject) => {
-          AndroidApiCall('GetCoreState', null, resolve, reject)
+          AndroidApiCall('GetAppState', null, resolve, reject)
         }),
         new Promise((_, reject) => {
-          setTimeout(() => reject(new Error(`GetCoreState timeout (${timeoutMs}ms)`)), timeoutMs)
+          setTimeout(() => reject(new Error(`GetAppState timeout (${timeoutMs}ms)`)), timeoutMs)
         }),
       ])
 
-      state.value = data || mockCoreState
-      devConsole.log('✅ CoreState загружен')
+      state.value = data || mockAppState
+      devConsole.log('✅ AppState загружен')
     } catch (err) {
-      devConsole.error('❌ Ошибка загрузки CoreState:', err)
-      error.value = err.message || 'Не удалось загрузить состояние ядра'
+      devConsole.error('❌ Ошибка загрузки AppState:', err)
+      error.value = err.message || 'Не удалось загрузить состояние приложения'
 
       if (import.meta.env.DEV) {
-        state.value = { ...mockCoreState }
+        state.value = { ...mockAppState }
         error.value = null
       }
     } finally {

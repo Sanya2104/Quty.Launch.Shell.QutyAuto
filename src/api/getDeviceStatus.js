@@ -1,9 +1,9 @@
-// src/api/getStatusBar.js
+// src/api/getDeviceStatus.js
 import { ref } from 'vue'
-import { isAndroidAvailable, AndroidApiCall, mockStatusBar } from '@/utilities/androidApi'
+import { isAndroidAvailable, AndroidApiCall, mockDeviceStatus } from '@/utilities/androidApi'
 import { devConsole } from '@/utilities/devConsole'
 
-export function getStatus() {
+export function getDeviceStatus() {
   const status = ref({
     cpuTemp: null,
     internetSpeed: null,
@@ -27,40 +27,37 @@ export function getStatus() {
     try {
       if (!isAndroidAvailable()) {
         devConsole.log('🛠️ Режим разработки: используются тестовые данные')
-        status.value = mockStatusBar
+        status.value = mockDeviceStatus
         loading.value = false
         return
       }
 
-      // GetStatusBar
       AndroidApiCall(
-        'GetStatusBar',
+        'GetDeviceStatus',
         null,
-        // onSuccess
         (data) => {
-          status.value = data || mockStatusBar
-          devConsole.log('✅ Статусы загружены:', JSON.stringify(status.value, null, 2))
+          status.value = data || mockDeviceStatus
+          devConsole.log('✅ DeviceStatus загружен:', JSON.stringify(status.value, null, 2))
           loading.value = false
         },
-        // onError
         (err) => {
-          devConsole.error('❌ Ошибка загрузки статусов:', err)
-          error.value = err || 'Не удалось загрузить статусы'
+          devConsole.error('❌ Ошибка загрузки DeviceStatus:', err)
+          error.value = err || 'Не удалось загрузить статус устройства'
           loading.value = false
 
           if (import.meta.env.DEV && !isAndroidAvailable()) {
-            status.value = mockStatusBar
+            status.value = mockDeviceStatus
             error.value = null
           }
         }
       )
     } catch (err) {
-      devConsole.error('❌ Ошибка загрузки статусов:', err)
-      error.value = err.message || 'Не удалось загрузить статусы'
+      devConsole.error('❌ Ошибка загрузки DeviceStatus:', err)
+      error.value = err.message || 'Не удалось загрузить статус устройства'
       loading.value = false
 
       if (import.meta.env.DEV && !isAndroidAvailable()) {
-        status.value = mockStatusBar
+        status.value = mockDeviceStatus
         error.value = null
       }
     }
@@ -73,7 +70,6 @@ export function getStatus() {
   let intervalId = null
 
   const startPolling = (interval = 1000) => {
-    // Запускаем polling только если это реальное Android устройство
     if (!isAndroidAvailable()) {
       devConsole.log('🛠️ Режим разработки: polling отключён')
       return

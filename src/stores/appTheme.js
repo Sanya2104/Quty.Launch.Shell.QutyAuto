@@ -1,15 +1,15 @@
-// src/stores/coreTheme.js —singleton-хранилище темы ядра.
-// Загружает GetCoreState, применяет тему к CSS, подписывается на onCoreStateChanged.
-// Все компоненты получают тему через useCoreTheme(), не дублируя запросы к ядру.
+// src/stores/appTheme.js — singleton-хранилище темы приложения.
+// Загружает GetAppState, применяет тему к CSS, подписывается на onAppStateChanged.
+// Все компоненты получают тему через useAppTheme(), не дублируя запросы к ядру.
 
 import { ref, computed } from 'vue'
-import { getCoreState } from '@/api/getCoreState'
-import { applyCoreTheme } from '@/utilities/theme'
-import { subscribeCoreEvent, subscribeShellResume } from '@/utilities/coreEvents'
+import { getAppState } from '@/api/getAppState'
+import { applyAppTheme } from '@/utilities/theme'
+import { subscribeAppEvent, subscribeShellResume } from '@/utilities/appEvents'
 import { isAndroidAvailable } from '@/utilities/androidApi'
 
 /* Цветовые схемы ядра (ColorSchemeModel.getAllSchemes) — для dev-превью в браузере */
-export const CORE_SCHEMES = [
+export const APP_SCHEMES = [
   { id: 'red', primary: '#F44336', accent: '#EF5350' },
   { id: 'orange', primary: '#FF9800', accent: '#FF5722' },
   { id: 'lime', primary: '#CDDC39', accent: '#D4E157' },
@@ -21,14 +21,14 @@ export const CORE_SCHEMES = [
   { id: 'pink', primary: '#E91E63', accent: '#F06292' },
 ]
 
-const { state, loadState } = getCoreState()
+const { state, loadState } = getAppState()
 
 const ready = ref(false)
 let initialized = false
 let loading = false
 
 function apply() {
-  applyCoreTheme(state.value)
+  applyAppTheme(state.value)
 }
 
 async function refresh(force = true) {
@@ -54,7 +54,7 @@ async function refresh(force = true) {
   loading = false
 }
 
-export function useCoreTheme() {
+export function useAppTheme() {
   const init = () => {
     if (initialized) return
     initialized = true
@@ -62,11 +62,11 @@ export function useCoreTheme() {
     /* Стартовое применение (дефолт/мок) до ответа ядра */
     apply()
 
-    /* Ядро шлёт onCoreStateChanged при смене темы/языка/схемы в Настройках */
-    subscribeCoreEvent(() => refresh(true))
+    /* Ядро шлёт onAppStateChanged при смене темы/языка/схемы в Настройках */
+    subscribeAppEvent(() => refresh(true))
 
     /* Ядро НЕ уведомляет о смене цветовой схемы (она перекрашивает только
-       SettingsActivity), поэтому перечитываем GetCoreState при возврате на оболочку.
+       SettingsActivity), поэтому перечитываем GetAppState при возврате на оболочку.
        Первый pageshow происходит и при стартовой загрузке — до готовности
        игнорируем, иначе был бы дублирующий запрос сразу после init */
     subscribeShellResume(() => {
@@ -76,7 +76,7 @@ export function useCoreTheme() {
 
     /* Страховка: MainActivity не вызывает webView.onPause(), поэтому DOM-событие
        о возврате может не прийти. Периодически перечитываем состояние,
-       пока оболочка видима. GetCoreState дешёвый, интервал 30 сек — компромисс
+       пока оболочка видима. GetAppState дешёвый, интервал 30 сек — компромисс
        между отзывчивостью смены цветовой схемы и нагрузкой на IPC */
     if (isAndroidAvailable()) {
       setInterval(() => {
@@ -97,7 +97,7 @@ export function useCoreTheme() {
   /* Только для dev-режима (браузер): превью цветовой схемы */
   const devSetScheme = (id) => {
     if (isAndroidAvailable()) return
-    const scheme = CORE_SCHEMES.find((s) => s.id === id)
+    const scheme = APP_SCHEMES.find((s) => s.id === id)
     if (!scheme) return
     state.value = {
       ...state.value,
